@@ -257,7 +257,7 @@ function makeMockPi(): { pi: ExtensionAPI; registeredCommands: string[] } {
 }
 
 function makeMockCtx(cwd = "/home/user/projects/remote_pi") {
-  return { ui: { notify: vi.fn() }, cwd, abort: vi.fn() };
+  return { ui: { notify: vi.fn() }, cwd, abort: vi.fn(), mode: "tui" };
 }
 
 function deferred<T>(): {
@@ -4760,6 +4760,152 @@ describe("session_start auto-init skips relay in print/-p mode (#44)", () => {
 
     expect(_hasMeshNodeForTest()).toBe(false);
     expect(relayInstances).toHaveLength(0);
+  });
+
+  test("interactive first launch creates default project config and starts mesh", async () => {
+    process.argv = ["node", "pi"];
+    const cwd = mkdtempSync(join(tmpdir(), "remote-pi-auto-config-"));
+    const configPath = join(cwd, ".pi", "remote-pi", "config.json");
+    const onSessionStart = captureEventHandler("session_start");
+    _resetAutoInitedForTest();
+
+    try {
+      onSessionStart({ type: "session_start" }, makeMockCtx(cwd));
+      await new Promise<void>((r) => setTimeout(r, 20));
+
+      expect(JSON.parse(readFileSync(configPath, "utf8"))).toEqual({
+        agent_name: basename(cwd),
+        auto_start_relay: true,
+      });
+      expect(_hasMeshNodeForTest()).toBe(true);
+    } finally {
+      rmSync(cwd, { recursive: true, force: true });
+    }
+  });
+
+  test("interactive session_start does not overwrite existing project config", async () => {
+    process.argv = ["node", "pi"];
+    const cwd = mkdtempSync(join(tmpdir(), "remote-pi-keep-config-"));
+    const configDir = join(cwd, ".pi", "remote-pi");
+    const configPath = join(configDir, "config.json");
+    mkdirSync(configDir, { recursive: true });
+    writeFileSync(configPath, JSON.stringify({ agent_name: "custom", auto_start_relay: true }, null, 2));
+    const onSessionStart = captureEventHandler("session_start");
+    _resetAutoInitedForTest();
+
+    try {
+      onSessionStart({ type: "session_start" }, makeMockCtx(cwd));
+      await new Promise<void>((r) => setTimeout(r, 20));
+
+      expect(JSON.parse(readFileSync(configPath, "utf8"))).toEqual({
+        agent_name: "custom",
+        auto_start_relay: true,
+      });
+      expect(_hasMeshNodeForTest()).toBe(true);
+    } finally {
+      rmSync(cwd, { recursive: true, force: true });
+    }
+  });
+
+  test("print mode does not create a missing project config", async () => {
+    process.argv = ["node", "pi", "--print", "hello"];
+    const cwd = mkdtempSync(join(tmpdir(), "remote-pi-print-no-config-"));
+    const configPath = join(cwd, ".pi", "remote-pi", "config.json");
+    const onSessionStart = captureEventHandler("session_start");
+    _resetAutoInitedForTest();
+
+    try {
+      onSessionStart({ type: "session_start" }, { ...makeMockCtx(cwd), mode: "print" });
+      await new Promise<void>((r) => setTimeout(r, 20));
+
+      expect(() => statSync(configPath)).toThrow();
+      expect(_hasMeshNodeForTest()).toBe(false);
+    } finally {
+      rmSync(cwd, { recursive: true, force: true });
+    }
+  });
+
+  test("json mode does not create a missing project config", async () => {
+    process.argv = ["node", "pi", "--json"];
+    const cwd = mkdtempSync(join(tmpdir(), "remote-pi-json-no-config-"));
+    const configPath = join(cwd, ".pi", "remote-pi", "config.json");
+    const onSessionStart = captureEventHandler("session_start");
+    _resetAutoInitedForTest();
+
+    try {
+      onSessionStart({ type: "session_start" }, { ...makeMockCtx(cwd), mode: "json" });
+      await new Promise<void>((r) => setTimeout(r, 20));
+
+      expect(() => statSync(configPath)).toThrow();
+      expect(_hasMeshNodeForTest()).toBe(false);
+    } finally {
+      rmSync(cwd, { recursive: true, force: true });
+    }
+  });
+
+  test("untrusted project does not create a missing project config", async () => {
+    process.argv = ["node", "pi"];
+    const cwd = mkdtempSync(join(tmpdir(), "remote-pi-untrusted-no-config-"));
+    const configPath = join(cwd, ".pi", "remote-pi", "config.json");
+    const onSessionStart = captureEventHandler("session_start");
+    _resetAutoInitedForTest();
+
+    try {
+      onSessionStart({ type: "session_start" }, {
+        ...makeMockCtx(cwd),
+        isProjectTrusted: () => false,
+      });
+      await new Promise<void>((r) => setTimeout(r, 20));
+
+      expect(() => statSync(configPath)).toThrow();
+      expect(_hasMeshNodeForTest()).toBe(false);
+    } finally {
+      rmSync(cwd, { recursive: true, force: true });
+    }
+  });
+
+  test("project trust check failure does not create config or crash", async () => {
+    process.argv = ["node", "pi"];
+    const cwd = mkdtempSync(join(tmpdir(), "remote-pi-trust-error-no-config-"));
+    const configPath = join(cwd, ".pi", "remote-pi", "config.json");
+    const onSessionStart = captureEventHandler("session_start");
+    _resetAutoInitedForTest();
+
+    try {
+      expect(() => onSessionStart({ type: "session_start" }, {
+        ...makeMockCtx(cwd),
+        isProjectTrusted: () => { throw new Error("trust unavailable"); },
+      })).not.toThrow();
+      await new Promise<void>((r) => setTimeout(r, 20));
+
+      expect(() => statSync(configPath)).toThrow();
+      expect(_hasMeshNodeForTest()).toBe(false);
+    } finally {
+      rmSync(cwd, { recursive: true, force: true });
+    }
+  });
+
+  test("config write failure does not start mesh or crash", async () => {
+    process.argv = ["node", "pi"];
+    const root = mkdtempSync(join(tmpdir(), "remote-pi-bad-cwd-"));
+    const cwd = join(root, "not-a-dir");
+    writeFileSync(cwd, "file blocks config dir");
+    const ctx = makeMockCtx(cwd);
+    const onSessionStart = captureEventHandler("session_start");
+    _resetAutoInitedForTest();
+
+    try {
+      onSessionStart({ type: "session_start" }, ctx);
+      await new Promise<void>((r) => setTimeout(r, 20));
+
+      expect(ctx.ui.notify).toHaveBeenCalledWith(
+        expect.stringContaining("Could not auto-create"),
+        "warning",
+      );
+      expect(_hasMeshNodeForTest()).toBe(false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 
   // Guard the negative: a normal interactive session_start (no -p/--print) still

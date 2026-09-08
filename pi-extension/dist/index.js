@@ -2091,12 +2091,11 @@ const extension = (pi) => {
         // ctx (has ui.notify + dialogs for the first-run wizard).
         if (!_autoInited) {
             // Daemon: always init (supervisor sets REMOTE_PI_DIRECT_CONFIG so a config
-            // is present at process.cwd()). Interactive: only init when the
-            // session_start ctx announces its cwd AND a local config already exists
-            // there — never auto-pop the first-run wizard on session_start (a new dir
-            // with no config stays idle until the user runs /remote-pi once). The
-            // cwd guard also keeps tests with a minimal ctx (no cwd) from triggering
-            // the wizard path.
+            // is present at process.cwd()). Interactive sessions can self-bootstrap:
+            // when no local config exists yet, create the same default the first-run
+            // wizard would have offered (leaf cwd name + relay enabled), then join.
+            // The cwd guard keeps tests with a minimal ctx (no cwd) from triggering
+            // the project-local config path.
             const isDaemon = process.env["REMOTE_PI_DAEMON"] === "1";
             // One-shot / non-interactive Pi (`pi -p` / `pi --print`) is documented as
             // "process the prompt and exit". Auto-starting the relay there opens a WS
@@ -2105,16 +2104,37 @@ const extension = (pi) => {
             // mode (REMOTE_PI_DAEMON=1) and normal interactive sessions never pass
             // `-p`/`--print`, so they still auto-start the relay exactly as before.
             const isPrintMode = process.argv.includes("-p") || process.argv.includes("--print");
+            const ctxMode = "mode" in ctx ? ctx.mode : undefined;
+            const isOneShotMode = isPrintMode || ctxMode === "print" || ctxMode === "json";
             const cwd = isDaemon ? process.cwd() : "cwd" in ctx ? ctx.cwd : undefined;
-            if (!isPrintMode &&
-                cwd &&
-                localConfigExists(cwd) &&
-                effectiveAutoStartRelay(loadLocalConfig(cwd))) {
-                _autoInited = true;
-                const initCtx = isDaemon
-                    ? { ui: _headlessUi(), cwd: process.cwd() }
-                    : ctx;
-                void _cmdRoot(initCtx);
+            if (!isOneShotMode && cwd) {
+                const trustAwareCtx = ctx;
+                let projectTrusted = true;
+                if (typeof trustAwareCtx.isProjectTrusted === "function") {
+                    try {
+                        projectTrusted = trustAwareCtx.isProjectTrusted();
+                    }
+                    catch {
+                        projectTrusted = false;
+                    }
+                }
+                const canCreateLocalConfig = !isDaemon && projectTrusted && (ctxMode === undefined || ctxMode === "tui");
+                if (canCreateLocalConfig && !localConfigExists(cwd)) {
+                    saveLocalConfig(cwd, {
+                        agent_name: defaultAgentName(cwd),
+                        auto_start_relay: true,
+                    });
+                    if (!localConfigExists(cwd)) {
+                        ctx.ui.notify(`[remote-pi] Could not auto-create ${cwd}/.pi/remote-pi/config.json; run /remote-pi setup to configure this project.`, "warning");
+                    }
+                }
+                if (localConfigExists(cwd) && effectiveAutoStartRelay(loadLocalConfig(cwd))) {
+                    _autoInited = true;
+                    const initCtx = isDaemon
+                        ? { ui: _headlessUi(), cwd: process.cwd() }
+                        : ctx;
+                    void _cmdRoot(initCtx);
+                }
             }
         }
     });
