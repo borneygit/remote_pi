@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from "vitest";
 import { EventEmitter } from "node:events";
-import { mkdtempSync, readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, renameSync, rmSync } from "node:fs";
 import { setTimeout as wait } from "node:timers/promises";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
@@ -99,6 +99,89 @@ function observe<T>(promise: Promise<T>): Promise<
 }
 
 describe("agent-network e2e", () => {
+  test.skipIf(process.platform === "win32")(
+    "follower retries after the first failover election exhausts and the socket path recovers",
+    async () => {
+      const root = mkdtempSync(join(tmpdir(), "pi-e2e-reconnect-"));
+      const liveDir = join(root, "live");
+      const unavailableDir = join(root, "unavailable");
+      const sock = join(liveDir, "broker.sock");
+      const { mkdirSync } = await import("node:fs");
+      mkdirSync(liveDir);
+
+      const leader = await makePeer(sock, "leader");
+      const follower = await makePeer(sock, "follower");
+
+      try {
+        renameSync(liveDir, unavailableDir);
+        await leader.leave();
+
+        // `joinOrLead` exhausts its complete first election while the parent
+        // path is unavailable. Restoring it must be enough for the live peer to
+        // recover without rebuilding the extension via `/reload`.
+        await wait(2_500);
+        renameSync(unavailableDir, liveDir);
+
+        const deadline = Date.now() + 7_000;
+        let reconnected = false;
+        while (Date.now() < deadline) {
+          try {
+            await follower.request("broker", { type: "list_peers" }, 250);
+            reconnected = true;
+            break;
+          } catch {
+            await wait(100);
+          }
+        }
+
+        expect(reconnected).toBe(true);
+      } finally {
+        await Promise.allSettled([leader.leave(), follower.leave()]);
+        rmSync(root, { recursive: true, force: true });
+      }
+    },
+    15_000,
+  );
+
+  test.skipIf(process.platform === "win32")(
+    "leave cancels failover retries without creating a ghost peer",
+    async () => {
+      const root = mkdtempSync(join(tmpdir(), "pi-e2e-reconnect-leave-"));
+      const liveDir = join(root, "live");
+      const unavailableDir = join(root, "unavailable");
+      const sock = join(liveDir, "broker.sock");
+      const { mkdirSync } = await import("node:fs");
+      mkdirSync(liveDir);
+
+      const leader = await makePeer(sock, "leader");
+      const follower = await makePeer(sock, "follower");
+      const onReconnect = vi.fn();
+      follower.onReconnect(onReconnect);
+
+      try {
+        renameSync(liveDir, unavailableDir);
+        await leader.leave();
+        await wait(250);
+        await follower.leave();
+        renameSync(unavailableDir, liveDir);
+        await wait(2_500);
+
+        const observer = await makePeer(sock, "observer");
+        try {
+          const reply = await observer.request("broker", { type: "list_peers" });
+          expect((reply.body as { peers?: string[] }).peers).toEqual(["observer"]);
+          expect(onReconnect).not.toHaveBeenCalled();
+        } finally {
+          await observer.leave();
+        }
+      } finally {
+        await Promise.allSettled([leader.leave(), follower.leave()]);
+        rmSync(root, { recursive: true, force: true });
+      }
+    },
+    10_000,
+  );
+
   test("1) single agent join — peer alone with itself as leader", async () => {
     const sock = tmpSock();
     const p = await makePeer(sock, "solo");

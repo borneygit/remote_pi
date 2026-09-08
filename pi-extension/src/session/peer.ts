@@ -47,7 +47,7 @@ export interface SessionPeerOptions {
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 const ACK_TIMEOUT_MS = 5_000;
-const FAILOVER_RETRY_MS = 100;
+const FAILOVER_RETRY_BACKOFFS_MS = [100, 250, 500, 1_000, 2_000, 5_000] as const;
 
 export type AckStatus = "received" | "busy" | "denied" | "timeout";
 
@@ -147,6 +147,7 @@ export class SessionPeer {
   private readonly handlers = new Set<MessageHandler>();
   private readonly reconnectHandlers = new Set<ReconnectHandler>();
   private leftFlag = false;
+  private reconnectGeneration = 0;
 
   constructor(opts: SessionPeerOptions) {
     this.opts = opts;
@@ -290,6 +291,7 @@ export class SessionPeer {
    * a soft rejoin: leaves & rejoins with the new name.
    */
   async rename(newName: string): Promise<string> {
+    this.reconnectGeneration += 1;
     await this._teardownConn();
     this.opts.name = newName;
     this.assignedName = newName;
@@ -298,6 +300,7 @@ export class SessionPeer {
 
   async leave(): Promise<void> {
     this.leftFlag = true;
+    this.reconnectGeneration += 1;
     await this._teardownConn();
   }
 
@@ -519,18 +522,38 @@ export class SessionPeer {
     // `!== closedSock`, so we skip. Genuine leader death: `this.socket` is still
     // the (now-closed) follower socket → identity matches → we re-elect.
     if (this.socket !== closedSock) return;
-    // Attempt to re-elect once. New leader will bind sockPath; we either
-    // become leader ourselves or rejoin as follower.
-    await delay(FAILOVER_RETRY_MS);
-    if (this.leftFlag || this.socket !== closedSock) return;
-    try {
-      await this._joinOrLead();
-      // The new broker's peers map starts fresh — consumers must re-query
-      // any cached state (peer count, etc.) that depended on the old broker.
-      for (const h of this.reconnectHandlers) {
-        try { h(); } catch { /* handler errors don't break peer */ }
+    // Keep retrying after transient election failures. A leader shutdown,
+    // machine wake, or a stalled event loop can outlive one complete
+    // `joinOrLead` attempt; giving up there leaves a live Pi permanently absent
+    // from the broker roster until `/reload` rebuilds this SessionPeer.
+    const generation = ++this.reconnectGeneration;
+    let attempt = 0;
+    while (!this.leftFlag && generation === this.reconnectGeneration) {
+      const backoff = FAILOVER_RETRY_BACKOFFS_MS[
+        Math.min(attempt, FAILOVER_RETRY_BACKOFFS_MS.length - 1)
+      ];
+      await delay(backoff);
+      if (this.leftFlag || generation !== this.reconnectGeneration) return;
+
+      try {
+        await this._joinOrLead();
+        if (this.leftFlag || generation !== this.reconnectGeneration) {
+          await this._teardownConn();
+          return;
+        }
+        // The new broker's peers map starts fresh — consumers must re-query
+        // any cached state (peer count, etc.) that depended on the old broker.
+        for (const h of this.reconnectHandlers) {
+          try { h(); } catch { /* handler errors don't break peer */ }
+        }
+        return;
+      } catch {
+        // A failed registration can leave a partial candidate socket or broker.
+        // Dispose it before the next election so retries cannot create ghosts.
+        await this._teardownConn();
+        attempt += 1;
       }
-    } catch { /* election failed; peer stuck in disconnected state */ }
+    }
   }
 
   private async _teardownConn(): Promise<void> {
