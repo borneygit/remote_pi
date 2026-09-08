@@ -1,0 +1,16 @@
+{
+  "name": "remote-pi-fork-package",
+  "version": "0.7.0-reconnect.1",
+  "private": true,
+  "workspaces": [
+    "pi-extension"
+  ],
+  "scripts": {
+    "postinstall": "npm run build --workspace=remote-pi"
+  },
+  "pi": {
+    "extensions": [
+      "./pi-extension/dist"
+    ]
+  }
+}
