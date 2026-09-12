@@ -506,7 +506,7 @@ class _Connection {
       if (!_handshaken) {
         if (message is! Hello) {
           _send(const RemoteError(code: 'handshake_required'));
-          return close();
+          return await close();
         }
         if (message.version != protocolVersion) {
           _send(
@@ -515,13 +515,13 @@ class _Connection {
               detail: 'server=$protocolVersion client=${message.version}',
             ),
           );
-          return close();
+          return await close();
         }
         // Porta de loopback aceita conexão de qualquer processo da máquina;
         // o token é o que restringe ao dono do arquivo de rendezvous.
         if (_expectedToken != null && message.token != _expectedToken) {
           _send(const RemoteError(code: 'invalid_token'));
-          return close();
+          return await close();
         }
         _handshaken = true;
         _localClient = message.local;
