@@ -612,8 +612,8 @@ void main() {
     // k3 está bloqueado por k2 (pendente); k1 já terminou e não conta.
     expect(find.text('blocked by 1'), findsOneWidget);
     expect(find.byIcon(Icons.lock_outline), findsOneWidget);
-    // k2 segura k3.
-    expect(find.text('blocks 1'), findsOneWidget);
+    // k1 e k2 seguram k3: cada um mostra "blocks 1".
+    expect(find.text('blocks 1'), findsNWidgets(2));
 
     // Filtro "Blocked" deixa só o k3.
     await tester.tap(find.byIcon(Icons.filter_alt_outlined));
