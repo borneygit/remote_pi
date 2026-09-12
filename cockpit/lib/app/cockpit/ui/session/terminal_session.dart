@@ -107,18 +107,18 @@ class TerminalSession extends PaneItem {
     final decoded = _gateway.output.cast<List<int>>().transform(
       const Utf8Decoder(allowMalformed: true),
     );
-    _sub = _redactor.isEmpty
-        ? decoded.listen(_coalescer.add)
-        : decoded
-              .map(_redactor.feed)
-              .where((s) => s.isNotEmpty)
-              .listen(
-                _coalescer.add,
-                onDone: () {
-                  final tail = _redactor.flush();
-                  if (tail.isNotEmpty) _coalescer.add(tail);
-                },
-              );
+    // Sempre pelo filtro (passthrough quando vazio): o workspace remoto só
+    // conhece seus segredos depois do spawn, via [updateRedaction].
+    _sub = decoded
+        .map(_redactor.feed)
+        .where((s) => s.isNotEmpty)
+        .listen(
+          _coalescer.add,
+          onDone: () {
+            final tail = _redactor.flush();
+            if (tail.isNotEmpty) _coalescer.add(tail);
+          },
+        );
     terminal.onOutput = (data) {
       final text = utf8.decode(data, allowMalformed: true);
       _maybeInterrupt(text);
@@ -325,6 +325,10 @@ class TerminalSession extends PaneItem {
   /// Troca os valores do `.env.cockpit` por `***` na saída (ver
   /// [SecretRedactor]). Vazio quando o workspace não tem segredos.
   final SecretRedactor _redactor;
+
+  /// Segredos conhecidos depois do spawn (workspace remoto: o `.env.cockpit`
+  /// é lido no host pelo gateway, já com a aba viva).
+  void updateRedaction(Iterable<String> secrets) => _redactor.update(secrets);
   late final PtyOutputCoalescer _coalescer;
 
   // --- Persistência do scrollback (replay no próximo boot) --------------------

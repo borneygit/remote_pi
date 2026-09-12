@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:cockpit/app/core/utils/remote_path.dart';
+
 /// Nome do arquivo de variáveis de ambiente por workspace.
 ///
 /// Um `KEY=VALUE` por linha, injetado no ambiente de **todo terminal** que o
@@ -108,6 +110,24 @@ Map<String, String> loadWorkspaceEnvSync(Iterable<String> roots) {
     } on FileSystemException {
       continue;
     }
+    merged.addAll(parseWorkspaceEnv(source));
+  }
+  return merged;
+}
+
+/// Versão remota de [loadWorkspaceEnvSync]: mesma fusão por root, mas o
+/// arquivo é lido no HOST por [readText] (a `fs.read` do `cockpit-server`).
+/// [readText] devolve `null` quando o arquivo não existe ou falhou — a root
+/// contribui com nada, igual ao local. Separado da I/O pra ser testável.
+Future<Map<String, String>> loadWorkspaceEnvRemote(
+  Iterable<String> roots,
+  Future<String?> Function(String path) readText,
+) async {
+  final merged = <String, String>{};
+  for (final root in roots) {
+    if (root.isEmpty) continue;
+    final source = await readText(remotePathJoin(root, kWorkspaceEnvFileName));
+    if (source == null) continue;
     merged.addAll(parseWorkspaceEnv(source));
   }
   return merged;

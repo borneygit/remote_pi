@@ -22,6 +22,12 @@ import 'package:cockpit_remote/cockpit_remote.dart';
 class RemoteHostTerminalGateway implements TerminalGateway {
   RemoteHostTerminalGateway(this._connector);
 
+  /// `.env.cockpit` do workspace REMOTO: lido no host (via `fs.read`) logo
+  /// antes do spawn e fundido no ambiente da PTY, abaixo do env do Cockpit.
+  /// A VM pluga por aba; `null` = sem arquivo/sem injeção. Falha de leitura
+  /// não derruba a aba — abre sem as variáveis.
+  Future<Map<String, String>> Function()? workspaceEnvLoader;
+
   final RemoteHostConnector _connector;
 
   RemoteTerminalService? _service;
@@ -191,6 +197,17 @@ class RemoteHostTerminalGateway implements TerminalGateway {
     }
     if (_killed) return;
 
+    var workspaceEnv = const <String, String>{};
+    final loader = workspaceEnvLoader;
+    if (loader != null) {
+      try {
+        workspaceEnv = await loader();
+      } on Object {
+        workspaceEnv = const <String, String>{};
+      }
+      if (_killed) return;
+    }
+
     // Login shell: o **host** resolve seu próprio shell (o cliente não sabe qual
     // é o shell do host — pior no iPad, onde o fallback é `/bin/sh` e o
     // oh-my-zsh/.zshrc não carrega). Executable vazio = "use o $SHELL do host,
@@ -203,7 +220,9 @@ class RemoteHostTerminalGateway implements TerminalGateway {
           arguments: loginShell ? const <String>[] : profile.args,
           // Caminho é do filesystem REMOTO (vazio = HOME remota do servidor).
           workingDirectory: workingDirectory.isEmpty ? null : workingDirectory,
-          environment: _terminalEnv(extraEnv),
+          // Env do workspace PRIMEIRO: nunca sobrescreve tab id/hook do
+          // Cockpit (mesma ordem do spawn local).
+          environment: _terminalEnv({...workspaceEnv, ...extraEnv}),
           rows: rows,
           columns: columns,
           flowControlled: true,

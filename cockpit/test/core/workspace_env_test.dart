@@ -84,4 +84,34 @@ void main() {
       },
     );
   });
+
+  group('loadWorkspaceEnvRemote', () {
+    test(
+      'lê cada root pelo leitor, funde na ordem e ignora ausentes',
+      () async {
+        final asked = <String>[];
+        final env = await loadWorkspaceEnvRemote(['/srv/app', '/srv/lib', ''], (
+          path,
+        ) async {
+          asked.add(path);
+          return switch (path) {
+            '/srv/app/.env.cockpit' => 'X=app\nY=app\nPATH=/evil',
+            '/srv/lib/.env.cockpit' => 'Y=lib',
+            _ => null,
+          };
+        });
+        expect(asked, ['/srv/app/.env.cockpit', '/srv/lib/.env.cockpit']);
+        expect(env, {'X': 'app', 'Y': 'lib'});
+      },
+    );
+
+    test('caminho Windows remoto usa o separador do host', () async {
+      final asked = <String>[];
+      await loadWorkspaceEnvRemote([r'C:\proj'], (path) async {
+        asked.add(path);
+        return null;
+      });
+      expect(asked, [r'C:\proj\.env.cockpit']);
+    });
+  });
 }

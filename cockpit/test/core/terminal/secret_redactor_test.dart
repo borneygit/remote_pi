@@ -53,4 +53,12 @@ void main() {
     expect(r.feed('..abcdefg'), '..');
     expect(r.feed('h!'), '***!');
   });
+
+  test('update troca os segredos com a aba viva (workspace remoto)', () {
+    final r = SecretRedactor(const []);
+    expect(r.feed('token=sk-abc12345\n'), 'token=sk-abc12345\n');
+    r.update(['sk-abc12345']);
+    expect(r.isEmpty, isFalse);
+    expect(r.feed('token=sk-abc12345\n'), 'token=***\n');
+  });
 }

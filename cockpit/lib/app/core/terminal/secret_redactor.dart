@@ -23,16 +23,27 @@ class SecretRedactor {
   SecretRedactor(
     Iterable<String> secrets, {
     this.mask = '***',
-    int minLength = 8,
-  }) : _secrets = secrets.where((s) => s.length >= minLength).toSet().toList()
-         ..sort((a, b) => b.length.compareTo(a.length)) {
-    _maxLength = _secrets.isEmpty ? 0 : _secrets.first.length;
+    this.minLength = 8,
+  }) {
+    update(secrets);
   }
 
   final String mask;
-  final List<String> _secrets; // do maior pro menor: o maior casa primeiro.
-  late final int _maxLength;
+
+  /// Segredos mais curtos que isto não entram no filtro.
+  final int minLength;
+  List<String> _secrets = const []; // do maior pro menor: o maior casa 1º.
+  int _maxLength = 0;
   String _carry = '';
+
+  /// Troca o conjunto de segredos (ex.: workspace remoto, cujo `.env.cockpit`
+  /// chega do host depois do spawn). A cauda segurada continua válida: é
+  /// reavaliada contra a lista nova no próximo [feed].
+  void update(Iterable<String> secrets) {
+    _secrets = secrets.where((s) => s.length >= minLength).toSet().toList()
+      ..sort((a, b) => b.length.compareTo(a.length));
+    _maxLength = _secrets.isEmpty ? 0 : _secrets.first.length;
+  }
 
   /// Nada a redigir: a sessão pode pular o filtro por completo.
   bool get isEmpty => _secrets.isEmpty;

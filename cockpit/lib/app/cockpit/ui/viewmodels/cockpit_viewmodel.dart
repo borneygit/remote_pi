@@ -53,6 +53,7 @@ import 'package:cockpit/app/cockpit/domain/entities/file_node.dart';
 import 'package:cockpit/app/cockpit/domain/entities/gallery_template.dart';
 import 'package:cockpit/app/core/utils/workspace_env.dart';
 import 'package:cockpit/app/cockpit/domain/services/workspace_cycle.dart';
+import 'package:cockpit/app/cockpit/data/remote/remote_host_terminal_gateway.dart';
 import 'package:cockpit/i18n/strings.g.dart' as slang;
 import 'package:cockpit/app/cockpit/domain/entities/notebook_document.dart';
 import 'package:cockpit/app/cockpit/domain/entities/file_view.dart';
@@ -5435,14 +5436,28 @@ class CockpitViewModel extends ChangeNotifier {
     // `.env.cockpit` do workspace (raiz + cada root em multi-root), lido a
     // cada spawn: aba nova já vê a chave nova. Só local: no remoto o arquivo
     // mora no host e este processo não o enxerga.
-    final workspaceEnv = _isRemoteWorkspace(projectId)
-        ? const <String, String>{}
+    final remote = _isRemoteWorkspace(projectId);
+    // Remoto: o arquivo mora no host e é lido pelo gateway antes do spawn;
+    // aqui entra só o que já foi lido numa aba anterior (pra redação nascer
+    // certa). A aba nova ainda recebe [updateRedaction] quando o load fecha.
+    final workspaceEnv = remote
+        ? (_remoteWorkspaceEnv[projectId] ?? const <String, String>{})
         : _workspaceEnvFor(projectId);
+    final gateway = _gatewayForProject(projectId);
+    TerminalSession? built;
+    if (remote && gateway is RemoteHostTerminalGateway) {
+      gateway.workspaceEnvLoader = () async {
+        final env = await _loadRemoteWorkspaceEnv(projectId);
+        _remoteWorkspaceEnv[projectId] = env;
+        built?.updateRedaction(env.values);
+        return env;
+      };
+    }
     final t = TerminalSession(
       id: id,
       projectId: projectId,
       workingDirectory: cwd,
-      gateway: _gatewayForProject(projectId),
+      gateway: gateway,
       // Workspace REMOTO sem escolha explícita: quem decide o shell é o host.
       // O padrão local não vale do outro lado — um cliente Windows pedia
       // `powershell.exe` num host macOS e a aba abria vazia, sem erro.
@@ -5492,9 +5507,33 @@ class CockpitViewModel extends ChangeNotifier {
     t.onCwdChanged = () => _scheduleSave(projectId);
     // Restauração: re-arma a trava de nome sem notificar (aba ainda não montada).
     if (manualLabel != null) t.restoreManualLabel(manualLabel);
+    built = t;
     _sessions[t.id] = t;
-    if (!_isRemoteWorkspace(projectId)) _warnTrackedWorkspaceEnv(t, projectId);
+    if (!remote) _warnTrackedWorkspaceEnv(t, projectId);
     return t;
+  }
+
+  /// Último `.env.cockpit` lido de cada workspace remoto (valores pra redação
+  /// de abas abertas depois; o gateway relê o arquivo a cada spawn).
+  final Map<String, Map<String, String>> _remoteWorkspaceEnv = {};
+
+  /// Lê o `.env.cockpit` da raiz remota (e de cada root em multi-root) pelo
+  /// `fs.read` do host. Arquivo ausente ou ilegível contribui com nada.
+  Future<Map<String, String>> _loadRemoteWorkspaceEnv(String projectId) async {
+    final host = remoteHostForWorkspace(projectId);
+    final root = _projectById(projectId)?.remotePath ?? '';
+    if (host == null || root.isEmpty) return const <String, String>{};
+    final service = await _remoteHosts.fileServiceFor(host);
+    return loadWorkspaceEnvRemote(
+      <String>{root, ...remote.rootsOf(projectId)},
+      (path) async {
+        try {
+          return utf8.decode(await service.read(path, maxBytes: 64 * 1024));
+        } on Object {
+          return null; // sem arquivo (o comum) ou falha de leitura
+        }
+      },
+    );
   }
 
   /// Cache por root: o `.env.cockpit` está rastreado pelo git? Um arquivo
