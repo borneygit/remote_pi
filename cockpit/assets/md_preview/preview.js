@@ -122,7 +122,80 @@
     return table;
   }
 
+  /* ---- Mermaid ----------------------------------------------------------
+     Blocos ```mermaid viram SVG ANTES do morphdom, na árvore `next`: assim o
+     diff de DOM preserva scroll e não pisca a cada tecla. O SVG é cacheado
+     por texto-fonte, então só o diagrama editado é re-renderizado. Tema
+     (dark/default) segue a luminância do fundo do app; trocar o tema limpa
+     o cache e re-renderiza o último conteúdo. Erro de sintaxe mostra a
+     fonte com a mensagem, em vez de sumir com o bloco. */
+  var mermaidReady = false;
+  var mermaidDark = false;
+  var mermaidCache = {};
+  var mermaidSeq = 0;
+  var renderSeq = 0;
+  var last = null;
+
+  function ensureMermaid() {
+    if (!window.mermaid) return false;
+    if (!mermaidReady) {
+      window.mermaid.initialize({
+        startOnLoad: false,
+        securityLevel: "strict",
+        theme: mermaidDark ? "dark" : "default",
+      });
+      mermaidReady = true;
+    }
+    return true;
+  }
+
+  function mermaidBlocks(root) {
+    var out = [];
+    var codes = root.querySelectorAll("pre > code.language-mermaid");
+    for (var i = 0; i < codes.length; i++) out.push(codes[i].parentNode);
+    return out;
+  }
+
+  function renderMermaid(source) {
+    if (Object.prototype.hasOwnProperty.call(mermaidCache, source)) {
+      return Promise.resolve(mermaidCache[source]);
+    }
+    var id = "ckp-mermaid-" + ++mermaidSeq;
+    return window.mermaid
+      .render(id, source)
+      .then(function (res) {
+        mermaidCache[source] = { svg: res.svg };
+        return mermaidCache[source];
+      })
+      .catch(function (e) {
+        // mermaid deixa um <div id> órfão no body quando falha.
+        var orphan = document.getElementById("d" + id);
+        if (orphan) orphan.remove();
+        mermaidCache[source] = { error: String((e && e.message) || e) };
+        return mermaidCache[source];
+      });
+  }
+
+  function replaceMermaid(pre, source, result) {
+    var box = document.createElement("div");
+    box.className = "ckp-mermaid";
+    if (result.svg) {
+      box.innerHTML = result.svg;
+    } else {
+      box.className += " ckp-mermaid-error";
+      var code = document.createElement("pre");
+      code.textContent = source;
+      var msg = document.createElement("p");
+      msg.className = "ckp-mermaid-msg";
+      msg.textContent = result.error;
+      box.appendChild(code);
+      box.appendChild(msg);
+    }
+    pre.parentNode.replaceChild(box, pre);
+  }
+
   function render(markdown, docDir) {
+    var seq = ++renderSeq;
     var front = splitFrontmatter(markdown);
     var html = md.render(front ? front.body : markdown);
     var clean = window.DOMPurify.sanitize(html, SANITIZE);
@@ -131,19 +204,38 @@
     next.innerHTML = clean;
     if (front) next.insertBefore(frontmatterTable(front.fields), next.firstChild);
     rewriteImages(next, docDir);
-    var cur = document.getElementById("content");
-    // Diff de DOM: só os nós que mudaram trocam — sem piscar, sem perder scroll.
-    window.morphdom(cur, next);
+    var pres = ensureMermaid() ? mermaidBlocks(next) : [];
+    var jobs = pres.map(function (pre) {
+      var source = pre.firstChild.textContent;
+      return renderMermaid(source).then(function (result) {
+        replaceMermaid(pre, source, result);
+      });
+    });
+    return Promise.all(jobs).then(function () {
+      // Conteúdo mais novo já chegou enquanto os diagramas renderizavam.
+      if (seq !== renderSeq) return;
+      var cur = document.getElementById("content");
+      // Diff de DOM: só os nós que mudaram trocam — sem piscar, sem perder scroll.
+      window.morphdom(cur, next);
+    });
+  }
+
+  function isDark(vars) {
+    var bg = vars["--ckp-bg"];
+    if (!bg || bg.length !== 7) return mermaidDark;
+    var r = parseInt(bg.slice(1, 3), 16) / 255;
+    var g = parseInt(bg.slice(3, 5), 16) / 255;
+    var b = parseInt(bg.slice(5, 7), 16) / 255;
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b < 0.5;
   }
 
   window.__cockpit = {
     setContent: function (markdown, docDir) {
-      try {
-        render(markdown, docDir || "");
-      } catch (e) {
+      last = { markdown: markdown, docDir: docDir || "" };
+      render(markdown, docDir || "").catch(function (e) {
         var cur = document.getElementById("content");
         cur.textContent = String((e && e.message) || e);
-      }
+      });
     },
     setTheme: function (vars) {
       var root = document.documentElement;
@@ -151,6 +243,13 @@
         if (Object.prototype.hasOwnProperty.call(vars, k)) {
           root.style.setProperty(k, vars[k]);
         }
+      }
+      var dark = isDark(vars);
+      if (dark !== mermaidDark) {
+        mermaidDark = dark;
+        mermaidReady = false; // re-initialize com o tema novo
+        mermaidCache = {};
+        if (last) window.__cockpit.setContent(last.markdown, last.docDir);
       }
     },
   };

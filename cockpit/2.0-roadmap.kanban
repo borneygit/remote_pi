@@ -14,11 +14,6 @@ labels: {bug: red, cd: orange, mobile: blue, docs: green, feature: purple, secur
 - [ ] Kanban: card dependencies (blocked by) <!-- labels: feature -->
       New `blockedBy: k1, k2` key in the card comment, next to id/labels; references by id (rename-safe), one direction stored, "blocks N" derived on read. Cards get an id when linked. UI: lock chip "blocked by N" that disappears when all blockers reach the last column, "blocks N" on the blocker, a "Blocked by" row in the detail panel with a title picker, and blocked/ready toggles in the filter popover. Moving a blocked card to the last column warns, never forbids. Unknown ids render as grey "unknown"; cycles allowed; dangling refs cleaned when the card is rewritten.
 
-- [ ] Mermaid diagrams <!-- labels: feature -->
-      Render ```mermaid blocks in markdown and .html views so the agent can draw flowcharts and sequence diagrams.
-
-
-
 - [ ] Windows code signing via SignPath OSS <!-- labels: cd -->
       Application submitted on signpath.org (MIT license added 2026-07-30). Once approved, integrate signing into the windows job of cockpit-release.yml. Unsigned builds keep triggering SmartScreen.
 
@@ -111,4 +106,7 @@ labels: {bug: red, cd: orange, mobile: blue, docs: green, feature: purple, secur
 
 - [x] Redact injected secrets in terminal output <!-- labels: security -->
       Done 2026-09-12: values from .env.cockpit (8+ chars) are replaced by *** before the output reaches the emulator, so screen, saved scrollback and `cockpit read-tab` are covered at once. Chunk-safe: only the shortest tail that could still be the start of a secret is held back, so latency stays zero in practice. ~170 MiB/s on yes-like output. Out of scope by decision: values encoded (base64) or split by ANSI escapes, and reading the file itself.
+
+- [x] Mermaid diagrams <!-- labels: feature -->
+      Done 2026-09-12: ```mermaid fences render as SVG in the markdown preview (Mermaid 11 bundled as an asset, no network, fits the nonce CSP). Rendered before the DOM diff with a per-source cache, so editing keeps scroll and only the changed diagram re-renders; dark/light follows the app theme; invalid diagrams show the source plus the error. Verified in headless Chrome under the real CSP. Not covered: the Linux native (non-webview) preview, and .html tabs, which keep JavaScript disabled by design (separate decision if the HTML view should run scripts).
 

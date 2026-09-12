@@ -111,3 +111,24 @@ hr {
 input[type="checkbox"] {
   accent-color: var(--ckp-link, #4da3ff);
 }
+
+/* Diagramas Mermaid (blocos ```mermaid). O SVG vem do próprio mermaid
+   (securityLevel strict); largura livre com rolagem horizontal. */
+.ckp-mermaid {
+  margin: 1em 0;
+  overflow-x: auto;
+}
+.ckp-mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+/* Diagrama com erro de sintaxe: mostra a fonte e a mensagem em vez de sumir. */
+.ckp-mermaid-error {
+  border-left: 3px solid #d9534f;
+  padding-left: 0.75em;
+}
+.ckp-mermaid-error .ckp-mermaid-msg {
+  color: #d9534f;
+  font-size: 0.85em;
+  margin: 0.25em 0 0;
+}

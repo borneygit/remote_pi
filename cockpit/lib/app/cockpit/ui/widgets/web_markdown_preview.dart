@@ -58,21 +58,30 @@ class _WebMarkdownPreviewState extends State<WebMarkdownPreview> {
       rootBundle.loadString('$base/markdown-it.min.js'),
       rootBundle.loadString('$base/purify.min.js'),
       rootBundle.loadString('$base/morphdom-umd.min.js'),
+      // Mermaid 11 (IIFE, ~2.7 MB): diagramas em blocos ```mermaid. Sem eval
+      // nem import dinâmico, então cabe na CSP de nonce da página.
+      rootBundle.loadString('$base/mermaid.min.js'),
       rootBundle.loadString('$base/preview.js'),
     ]);
     final nonce = base64Url.encode(
       List<int>.generate(16, (_) => Random.secure().nextInt(256)),
     );
+    // Um `</script>` literal dentro de um JS inlined fecha a tag no meio do
+    // arquivo (o parser de HTML não conhece strings de JS): o resto vira
+    // texto solto na página e o motor nunca define seu global. Escapar a
+    // barra é neutro pra JS (dentro de string/regex `<\/script>` == `</script>`).
+    String inline(String js) => js.replaceAll('</script', '<\\/script');
     final page = results[0]
         .replaceAll('__NONCE__', nonce)
         // replaceAll, não replaceFirst: qualquer outra ocorrência do token
         // (um comentário no HTML, por exemplo) roubava a substituição e o
         // <style> ficava com o literal — página sem estilo, fundo branco.
         .replaceAll('__CSS__', results[1])
-        .replaceFirst('__JS_MARKDOWN_IT__;', results[2])
-        .replaceFirst('__JS_PURIFY__;', results[3])
-        .replaceFirst('__JS_MORPHDOM__;', results[4])
-        .replaceFirst('__JS_PREVIEW__;', results[5]);
+        .replaceFirst('__JS_MARKDOWN_IT__;', inline(results[2]))
+        .replaceFirst('__JS_PURIFY__;', inline(results[3]))
+        .replaceFirst('__JS_MORPHDOM__;', inline(results[4]))
+        .replaceFirst('__JS_MERMAID__;', inline(results[5]))
+        .replaceFirst('__JS_PREVIEW__;', inline(results[6]));
     return _cachedPage = page;
   }
 
