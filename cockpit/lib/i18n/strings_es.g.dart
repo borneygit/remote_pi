@@ -1247,6 +1247,7 @@ class _Translations$cockpit$gallery$es extends Translations$cockpit$gallery$en {
 	@override late final _Translations$cockpit$gallery$tasks$es tasks = _Translations$cockpit$gallery$tasks$es._(_root);
 	@override late final _Translations$cockpit$gallery$notebook$es notebook = _Translations$cockpit$gallery$notebook$es._(_root);
 	@override late final _Translations$cockpit$gallery$workspaceEnv$es workspaceEnv = _Translations$cockpit$gallery$workspaceEnv$es._(_root);
+	@override late final _Translations$cockpit$gallery$diagram$es diagram = _Translations$cockpit$gallery$diagram$es._(_root);
 }
 
 // Path: cockpit.notebook
@@ -1574,6 +1575,17 @@ class _Translations$cockpit$gallery$workspaceEnv$es extends Translations$cockpit
 	// Translations
 	@override String get title => 'Env del workspace';
 	@override String get description => 'Variables inyectadas en cada terminal de este workspace. Pon tokens o credenciales de API aquí en vez de pegarlos en el prompt del agente. Queda fuera de git.';
+}
+
+// Path: cockpit.gallery.diagram
+class _Translations$cockpit$gallery$diagram$es extends Translations$cockpit$gallery$diagram$en {
+	_Translations$cockpit$gallery$diagram$es._(TranslationsEs root) : this._root = root, super.internal(root);
+
+	final TranslationsEs _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Diagrama';
+	@override String get description => 'Un markdown con un diagrama Mermaid: diagramas de flujo, secuencia, clases y Gantt, renderizados en la vista previa.';
 }
 
 // Path: cockpit.notebook.format
@@ -2699,6 +2711,8 @@ extension on TranslationsEs {
 			'cockpit.gallery.notebook.description' => 'Una carpeta de notas cortas con tags. El agente escribe, tú lees y editas. También abre en Obsidian.',
 			'cockpit.gallery.workspaceEnv.title' => 'Env del workspace',
 			'cockpit.gallery.workspaceEnv.description' => 'Variables inyectadas en cada terminal de este workspace. Pon tokens o credenciales de API aquí en vez de pegarlos en el prompt del agente. Queda fuera de git.',
+			'cockpit.gallery.diagram.title' => 'Diagrama',
+			'cockpit.gallery.diagram.description' => 'Un markdown con un diagrama Mermaid: diagramas de flujo, secuencia, clases y Gantt, renderizados en la vista previa.',
 			'cockpit.notebook.notes' => 'Notas',
 			'cockpit.notebook.newNote' => 'Nueva nota',
 			'cockpit.notebook.searchPlaceholder' => 'Buscar notas',
@@ -3045,10 +3059,10 @@ extension on TranslationsEs {
 			'settings.remoteHosts.removeMessage' => ({required Object name}) => '¿Eliminar "${name}" y todos sus workspaces? No se borra nada en el host.',
 			'settings.remoteHosts.workspacesCount' => ({required Object count}) => '${count} workspace(s)',
 			'settings.remoteHosts.deviceKeyTitle' => 'Clave de este dispositivo',
-			'settings.remoteHosts.deviceKeyDesc' => 'Añade esta clave pública a ~/.ssh/authorized_keys del host para que este dispositivo pueda conectarse.',
-			'settings.remoteHosts.deviceKeyCopy' => 'Copiar clave pública',
 			_ => null,
 		} ?? switch (path) {
+			'settings.remoteHosts.deviceKeyDesc' => 'Añade esta clave pública a ~/.ssh/authorized_keys del host para que este dispositivo pueda conectarse.',
+			'settings.remoteHosts.deviceKeyCopy' => 'Copiar clave pública',
 			'settings.remoteHosts.deviceKeyCopied' => 'Clave pública copiada',
 			'settings.remoteHosts.statusConnected' => 'Conectado',
 			'settings.remoteHosts.statusConnecting' => 'Conectando…',

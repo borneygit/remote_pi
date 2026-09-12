@@ -812,6 +812,10 @@
       "workspaceEnv": {
         "title": "Env do workspace",
         "description": "Variáveis injetadas em todo terminal deste workspace. Coloque tokens ou logins de API aqui em vez de colar no prompt do agente. Fica fora do git."
+      },
+      "diagram": {
+        "title": "Diagrama",
+        "description": "Um markdown com um diagrama Mermaid: fluxogramas, sequências, modelos de classe e Gantt, renderizados no preview."
       }
     },
     "notebook": {

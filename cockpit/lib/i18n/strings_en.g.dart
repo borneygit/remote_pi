@@ -2542,6 +2542,7 @@ class Translations$cockpit$gallery$en {
 	late final Translations$cockpit$gallery$tasks$en tasks = Translations$cockpit$gallery$tasks$en.internal(_root);
 	late final Translations$cockpit$gallery$notebook$en notebook = Translations$cockpit$gallery$notebook$en.internal(_root);
 	late final Translations$cockpit$gallery$workspaceEnv$en workspaceEnv = Translations$cockpit$gallery$workspaceEnv$en.internal(_root);
+	late final Translations$cockpit$gallery$diagram$en diagram = Translations$cockpit$gallery$diagram$en.internal(_root);
 }
 
 // Path: cockpit.notebook
@@ -3152,6 +3153,21 @@ class Translations$cockpit$gallery$workspaceEnv$en {
 
 	/// en: 'Variables injected into every terminal of this workspace. Put API tokens or logins here instead of pasting them into the agent's prompt. Kept out of git.'
 	String get description => 'Variables injected into every terminal of this workspace. Put API tokens or logins here instead of pasting them into the agent\'s prompt. Kept out of git.';
+}
+
+// Path: cockpit.gallery.diagram
+class Translations$cockpit$gallery$diagram$en {
+	Translations$cockpit$gallery$diagram$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Diagram'
+	String get title => 'Diagram';
+
+	/// en: 'A markdown file with a Mermaid diagram: flowcharts, sequences, class models and Gantt charts, rendered in the preview.'
+	String get description => 'A markdown file with a Mermaid diagram: flowcharts, sequences, class models and Gantt charts, rendered in the preview.';
 }
 
 // Path: cockpit.notebook.format
@@ -4862,6 +4878,8 @@ extension on Translations {
 			'cockpit.gallery.notebook.description' => 'A folder of short notes with tags. The agent writes, you read and edit. Also opens in Obsidian.',
 			'cockpit.gallery.workspaceEnv.title' => 'Workspace env',
 			'cockpit.gallery.workspaceEnv.description' => 'Variables injected into every terminal of this workspace. Put API tokens or logins here instead of pasting them into the agent\'s prompt. Kept out of git.',
+			'cockpit.gallery.diagram.title' => 'Diagram',
+			'cockpit.gallery.diagram.description' => 'A markdown file with a Mermaid diagram: flowcharts, sequences, class models and Gantt charts, rendered in the preview.',
 			'cockpit.notebook.notes' => 'Notes',
 			'cockpit.notebook.newNote' => 'New note',
 			'cockpit.notebook.searchPlaceholder' => 'Search notes',
@@ -5208,10 +5226,10 @@ extension on Translations {
 			'settings.remoteHosts.removeMessage' => ({required Object name}) => 'Remove "${name}" and all its workspaces? Nothing is deleted on the host itself.',
 			'settings.remoteHosts.workspacesCount' => ({required Object count}) => '${count} workspace(s)',
 			'settings.remoteHosts.deviceKeyTitle' => 'This device\'s key',
-			'settings.remoteHosts.deviceKeyDesc' => 'Add this public key to ~/.ssh/authorized_keys on the host so this device can connect.',
-			'settings.remoteHosts.deviceKeyCopy' => 'Copy public key',
 			_ => null,
 		} ?? switch (path) {
+			'settings.remoteHosts.deviceKeyDesc' => 'Add this public key to ~/.ssh/authorized_keys on the host so this device can connect.',
+			'settings.remoteHosts.deviceKeyCopy' => 'Copy public key',
 			'settings.remoteHosts.deviceKeyCopied' => 'Public key copied',
 			'settings.remoteHosts.statusConnected' => 'Connected',
 			'settings.remoteHosts.statusConnecting' => 'Connecting…',

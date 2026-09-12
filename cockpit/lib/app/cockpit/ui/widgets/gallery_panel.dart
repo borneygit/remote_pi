@@ -52,6 +52,7 @@ class GalleryPanel extends StatelessWidget {
     GalleryTemplate.tasks => tr.tasks.title,
     GalleryTemplate.notebook => tr.notebook.title,
     GalleryTemplate.workspaceEnv => tr.workspaceEnv.title,
+    GalleryTemplate.diagram => tr.diagram.title,
   };
 
   static String _descriptionOf(
@@ -66,6 +67,7 @@ class GalleryPanel extends StatelessWidget {
     GalleryTemplate.tasks => tr.tasks.description,
     GalleryTemplate.notebook => tr.notebook.description,
     GalleryTemplate.workspaceEnv => tr.workspaceEnv.description,
+    GalleryTemplate.diagram => tr.diagram.description,
   };
 }
 
