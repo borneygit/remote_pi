@@ -5,6 +5,7 @@ import 'package:cockpit/app/cockpit/domain/contracts/terminal_gateway.dart';
 import 'package:cockpit/app/cockpit/domain/contracts/terminal_scrollback_store.dart';
 import 'package:cockpit/app/cockpit/domain/contracts/terminal_status_server.dart';
 import 'package:cockpit/app/core/domain/entities/harness.dart';
+import 'package:cockpit/app/core/terminal/secret_redactor.dart';
 import 'package:cockpit/app/cockpit/domain/services/terminal_harness_monitor.dart';
 import 'package:cockpit/app/core/domain/entities/terminal_profile.dart';
 import 'package:cockpit/i18n/strings.g.dart';
@@ -36,12 +37,14 @@ class TerminalSession extends PaneItem {
     required this.profile,
     String? title,
     Map<String, String> spawnEnv = const <String, String>{},
+    Iterable<String> redactSecrets = const <String>[],
     TerminalScrollbackStore? scrollbackStore,
     String? replay,
     String? startupCommand,
     TerminalEngine engine = TerminalEngine.xterm,
     this._monitor,
   }) : _scrollback = scrollbackStore,
+       _redactor = SecretRedactor(redactSecrets),
        _title = title ?? 'New terminal' {
     // O `ShiftEnterInputHandler` (antes do padrão) faz Shift+Enter virar quebra
     // de linha nos harnesses (claude, codex, pi) em vez de submeter; ele lê o
@@ -99,10 +102,23 @@ class TerminalSession extends PaneItem {
         _kickHarnessMonitor();
       },
     );
-    _sub = _gateway.output
-        .cast<List<int>>()
-        .transform(const Utf8Decoder(allowMalformed: true))
-        .listen(_coalescer.add);
+    // Redação dos valores do `.env.cockpit` ANTES do coalescer: cobre tela,
+    // scrollback gravado e `read-tab` de uma vez. Sem segredos é passthrough.
+    final decoded = _gateway.output.cast<List<int>>().transform(
+      const Utf8Decoder(allowMalformed: true),
+    );
+    _sub = _redactor.isEmpty
+        ? decoded.listen(_coalescer.add)
+        : decoded
+              .map(_redactor.feed)
+              .where((s) => s.isNotEmpty)
+              .listen(
+                _coalescer.add,
+                onDone: () {
+                  final tail = _redactor.flush();
+                  if (tail.isNotEmpty) _coalescer.add(tail);
+                },
+              );
     terminal.onOutput = (data) {
       final text = utf8.decode(data, allowMalformed: true);
       _maybeInterrupt(text);
@@ -305,6 +321,10 @@ class TerminalSession extends PaneItem {
   final TerminalGateway _gateway;
   final TerminalHarnessMonitor? _monitor;
   final KittyKeyboardTracker _kitty = KittyKeyboardTracker();
+
+  /// Troca os valores do `.env.cockpit` por `***` na saída (ver
+  /// [SecretRedactor]). Vazio quando o workspace não tem segredos.
+  final SecretRedactor _redactor;
   late final PtyOutputCoalescer _coalescer;
 
   // --- Persistência do scrollback (replay no próximo boot) --------------------

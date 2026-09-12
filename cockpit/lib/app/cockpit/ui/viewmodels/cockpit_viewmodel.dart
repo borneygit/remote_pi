@@ -5432,6 +5432,12 @@ class CockpitViewModel extends ChangeNotifier {
     TerminalProfile? profile,
     TerminalEngine? engine,
   }) {
+    // `.env.cockpit` do workspace (raiz + cada root em multi-root), lido a
+    // cada spawn: aba nova já vê a chave nova. Só local: no remoto o arquivo
+    // mora no host e este processo não o enxerga.
+    final workspaceEnv = _isRemoteWorkspace(projectId)
+        ? const <String, String>{}
+        : _workspaceEnvFor(projectId);
     final t = TerminalSession(
       id: id,
       projectId: projectId,
@@ -5460,12 +5466,14 @@ class CockpitViewModel extends ChangeNotifier {
       // O `cockpit-hook` do claude herda e reporta status de turno de volta.
       // `COCKPIT_TAB_ID` é o nome correto (o que a CLI endereça é uma tab);
       // `COCKPIT_PANE_ID` fica como alias legado (hook + binários antigos).
+      // Os VALORES do `.env.cockpit` viram `***` na saída desta aba: `env`,
+      // `echo $TOKEN` ou `curl -v` não expõem o segredo na tela, no
+      // scrollback nem no `read-tab` de um agente.
+      redactSecrets: workspaceEnv.values,
       spawnEnv: <String, String>{
-        // `.env.cockpit` do workspace (raiz + cada root em multi-root), lido a
-        // cada spawn: aba nova já vê a chave nova. Vem PRIMEIRO pra nunca
-        // sobrescrever o roteamento/transporte do Cockpit abaixo. Só local:
-        // no remoto o arquivo mora no host e este processo não o enxerga.
-        if (!_isRemoteWorkspace(projectId)) ..._workspaceEnvFor(projectId),
+        // Env do workspace vem PRIMEIRO pra nunca sobrescrever o
+        // roteamento/transporte do Cockpit abaixo.
+        ...workspaceEnv,
         'COCKPIT_TAB_ID': id,
         'COCKPIT_PANE_ID': id,
         ..._statusServer.hookEnv,
