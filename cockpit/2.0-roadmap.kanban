@@ -7,10 +7,6 @@ labels: {bug: red, cd: orange, mobile: blue, docs: green, feature: purple, secur
 ## Backlog
 
 
-- [ ] Keyboard shortcut to switch between workspaces <!-- labels: feature -->
-      Cycle through the rail (previous/next) and jump by position, like Cmd+1..9 for tabs in a browser. Today switching needs a click on the rail.
-
-
 - [ ] Explicit approval for .env.cockpit in a freshly cloned repo <!-- labels: security -->
       Like `direnv allow`: a repo you just cloned should not inject environment into your shell until you approve it once per workspace.
 
