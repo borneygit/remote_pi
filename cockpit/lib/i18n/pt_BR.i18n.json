@@ -511,6 +511,10 @@
       }
     },
     "kanbanView": {
+      "filter": "Filtrar",
+      "filterTitlePlaceholder": "Buscar por título",
+      "filterLabels": "Marcadores",
+      "filterClear": "Limpar",
       "boardView": "Quadro",
       "listView": "Lista",
       "refresh": "Atualizar do disco",

@@ -48,18 +48,22 @@ void main() {
       TranslationProvider(
         child: ShadcnApp(
           theme: buildTheme(brightness: Brightness.dark),
-          home: KanbanBoardView(
-            session: session,
-            active: true,
-            focused: true,
-            workspaceRoot: workspaceRoot,
-            onSave: (content) async {
-              saved.add(content);
-              if (saveOk) session.view = FileViewText(content);
-              return saveOk;
-            },
-            onReload: () async => reloads++,
-            onViewModeChanged: (asList) => viewModes.add(asList),
+          // Scaffold do shadcn: fornece o DrawerOverlay que o popover de
+          // filtro precisa (sem ele, showPopover assert-a no modo sheet).
+          home: Scaffold(
+            child: KanbanBoardView(
+              session: session,
+              active: true,
+              focused: true,
+              workspaceRoot: workspaceRoot,
+              onSave: (content) async {
+                saved.add(content);
+                if (saveOk) session.view = FileViewText(content);
+                return saveOk;
+              },
+              onReload: () async => reloads++,
+              onViewModeChanged: (asList) => viewModes.add(asList),
+            ),
           ),
         ),
       ),
@@ -543,5 +547,40 @@ void main() {
         '/repo-outro/a.kanban',
       );
     });
+  });
+
+  testWidgets('filtro por texto e por marcador esconde os outros cards', (
+    tester,
+  ) async {
+    await pump(tester);
+    expect(find.text('Primeiro card'), findsOneWidget);
+    expect(find.text('Card pronto'), findsOneWidget);
+
+    // Abre o popover pelo botão da toolbar.
+    await tester.tap(find.byIcon(Icons.filter_alt_outlined));
+    await tester.pumpAndSettle();
+    final field = find.byKey(const ValueKey('kanban-filter-text'));
+    expect(field, findsOneWidget);
+
+    // Texto: só "Primeiro card" bate.
+    await tester.enterText(field, 'primeiro');
+    await tester.pumpAndSettle();
+    expect(find.text('Primeiro card'), findsOneWidget);
+    expect(find.text('Card pronto'), findsNothing);
+
+    // Limpa e filtra pelo marcador `bug`: mesmo resultado.
+    await tester.tap(find.byKey(const ValueKey('kanban-filter-clear')));
+    await tester.pumpAndSettle();
+    expect(find.text('Card pronto'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('kanban-filter-label-bug')));
+    await tester.pumpAndSettle();
+    expect(find.text('Primeiro card'), findsOneWidget);
+    expect(find.text('Card pronto'), findsNothing);
+
+    // Fecha o popover: o filtro continua aplicado e o ícone fica preenchido.
+    await tester.tapAt(const Offset(5, 5));
+    await tester.pumpAndSettle();
+    expect(find.text('Card pronto'), findsNothing);
+    expect(find.byIcon(Icons.filter_alt), findsOneWidget);
   });
 }

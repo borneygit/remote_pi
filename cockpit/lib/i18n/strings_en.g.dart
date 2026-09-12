@@ -1719,6 +1719,18 @@ class Translations$cockpit$kanbanView$en {
 
 	// Translations
 
+	/// en: 'Filter'
+	String get filter => 'Filter';
+
+	/// en: 'Search titles'
+	String get filterTitlePlaceholder => 'Search titles';
+
+	/// en: 'Labels'
+	String get filterLabels => 'Labels';
+
+	/// en: 'Clear'
+	String get filterClear => 'Clear';
+
 	/// en: 'Board'
 	String get boardView => 'Board';
 
@@ -4599,6 +4611,10 @@ extension on Translations {
 			'cockpit.httpView.error.connectionFailedNoDetail' => 'Could not reach the server.',
 			'cockpit.httpView.error.timeout' => ({required Object seconds}) => 'The request timed out after ${seconds}s.',
 			'cockpit.httpView.error.responseTooLarge' => ({required Object bytes}) => 'The response is larger than the ${bytes} byte limit.',
+			'cockpit.kanbanView.filter' => 'Filter',
+			'cockpit.kanbanView.filterTitlePlaceholder' => 'Search titles',
+			'cockpit.kanbanView.filterLabels' => 'Labels',
+			'cockpit.kanbanView.filterClear' => 'Clear',
 			'cockpit.kanbanView.boardView' => 'Board',
 			'cockpit.kanbanView.listView' => 'List',
 			'cockpit.kanbanView.refresh' => 'Refresh from disk',
@@ -4671,12 +4687,12 @@ extension on Translations {
 			'cockpit.dbConnectionDialog.savePassword' => 'Save Password',
 			'cockpit.dbConnectionDialog.allowWrites' => 'Allow writes (agents)',
 			'cockpit.dbConnectionDialog.allowWritesHint' => 'off = agents can only read via CLI',
+			_ => null,
+		} ?? switch (path) {
 			'cockpit.dbConnectionDialog.visibleToAgents' => 'Visible to agents',
 			'cockpit.dbConnectionDialog.visibleToAgentsHint' => 'off = hidden from the CLI, GUI only',
 			'cockpit.dbConnectionDialog.testing' => 'Testing connection…',
 			'cockpit.dbConnectionDialog.connectionOk' => 'Connection OK',
-			_ => null,
-		} ?? switch (path) {
 			'cockpit.dbConnectionDialog.connectionFailed' => 'Connection failed',
 			'cockpit.dbConnectionDialog.editTitle' => 'Edit connection',
 			'cockpit.dbConnectionDialog.newTitle' => 'New connection',
@@ -5185,12 +5201,12 @@ extension on Translations {
 			'settings.remoteHosts.deviceKeyCopied' => 'Public key copied',
 			'settings.remoteHosts.statusConnected' => 'Connected',
 			'settings.remoteHosts.statusConnecting' => 'Connecting…',
+			_ => null,
+		} ?? switch (path) {
 			'settings.remoteHosts.statusReconnecting' => 'Reconnecting…',
 			'settings.remoteHosts.statusOffline' => 'Offline',
 			'settings.remoteHosts.statusIdle' => 'Not connected',
 			'settings.remoteHosts.helpTitle' => 'How it works',
-			_ => null,
-		} ?? switch (path) {
 			'settings.remoteHosts.helpBody' => 'Cockpit connects to your machine over SSH and talks to a small server that runs the terminals, files and git there. The host must have Cockpit (desktop) or the cockpit-server installed and running, and this device’s public key added to its ~/.ssh/authorized_keys.',
 			'automation.error.unavailable' => ({required Object harness}) => '${harness} is not installed or is not on PATH.',
 			'automation.error.modelUnavailable' => ({required Object model, required Object harness}) => 'Model "${model}" is not available for ${harness}. Choose another model in Settings.',

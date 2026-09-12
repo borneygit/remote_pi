@@ -863,6 +863,10 @@ class _Translations$cockpit$kanbanView$es extends Translations$cockpit$kanbanVie
 	final TranslationsEs _root; // ignore: unused_field
 
 	// Translations
+	@override String get filter => 'Filtrar';
+	@override String get filterTitlePlaceholder => 'Buscar por título';
+	@override String get filterLabels => 'Etiquetas';
+	@override String get filterClear => 'Limpiar';
 	@override String get boardView => 'Tablero';
 	@override String get listView => 'Lista';
 	@override String get refresh => 'Actualizar desde el disco';
@@ -2450,6 +2454,10 @@ extension on TranslationsEs {
 			'cockpit.httpView.error.connectionFailedNoDetail' => 'No se pudo alcanzar el servidor.',
 			'cockpit.httpView.error.timeout' => ({required Object seconds}) => 'El request superó el tiempo límite de ${seconds}s.',
 			'cockpit.httpView.error.responseTooLarge' => ({required Object bytes}) => 'La respuesta superó el límite de ${bytes} bytes.',
+			'cockpit.kanbanView.filter' => 'Filtrar',
+			'cockpit.kanbanView.filterTitlePlaceholder' => 'Buscar por título',
+			'cockpit.kanbanView.filterLabels' => 'Etiquetas',
+			'cockpit.kanbanView.filterClear' => 'Limpiar',
 			'cockpit.kanbanView.boardView' => 'Tablero',
 			'cockpit.kanbanView.listView' => 'Lista',
 			'cockpit.kanbanView.refresh' => 'Actualizar desde el disco',
@@ -2522,12 +2530,12 @@ extension on TranslationsEs {
 			'cockpit.dbConnectionDialog.savePassword' => 'Guardar contraseña',
 			'cockpit.dbConnectionDialog.allowWrites' => 'Permitir escritura (agentes)',
 			'cockpit.dbConnectionDialog.allowWritesHint' => 'desactivado = los agentes solo leen vía CLI',
+			_ => null,
+		} ?? switch (path) {
 			'cockpit.dbConnectionDialog.visibleToAgents' => 'Visible para agentes',
 			'cockpit.dbConnectionDialog.visibleToAgentsHint' => 'desactivado = oculto en la CLI, solo en la GUI',
 			'cockpit.dbConnectionDialog.testing' => 'Probando conexión…',
 			'cockpit.dbConnectionDialog.connectionOk' => 'Conexión OK',
-			_ => null,
-		} ?? switch (path) {
 			'cockpit.dbConnectionDialog.connectionFailed' => 'Fallo en la conexión',
 			'cockpit.dbConnectionDialog.editTitle' => 'Editar conexión',
 			'cockpit.dbConnectionDialog.newTitle' => 'Nueva conexión',
@@ -3036,12 +3044,12 @@ extension on TranslationsEs {
 			'settings.remoteHosts.deviceKeyCopied' => 'Clave pública copiada',
 			'settings.remoteHosts.statusConnected' => 'Conectado',
 			'settings.remoteHosts.statusConnecting' => 'Conectando…',
+			_ => null,
+		} ?? switch (path) {
 			'settings.remoteHosts.statusReconnecting' => 'Reconectando…',
 			'settings.remoteHosts.statusOffline' => 'Sin conexión',
 			'settings.remoteHosts.statusIdle' => 'No conectado',
 			'settings.remoteHosts.helpTitle' => 'Cómo funciona',
-			_ => null,
-		} ?? switch (path) {
 			'settings.remoteHosts.helpBody' => 'Cockpit se conecta a tu máquina por SSH y habla con un pequeño servidor que ejecuta las terminales, archivos y git allí. El host debe tener Cockpit (escritorio) o el cockpit-server instalado y en ejecución, y la clave pública de este dispositivo añadida en su ~/.ssh/authorized_keys.',
 			'automation.error.unavailable' => ({required Object harness}) => '${harness} no está instalado o no está en el PATH.',
 			'automation.error.modelUnavailable' => ({required Object model, required Object harness}) => 'El modelo "${model}" no está disponible para ${harness}. Elige otro modelo en Configuración.',

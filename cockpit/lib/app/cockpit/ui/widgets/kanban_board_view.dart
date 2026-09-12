@@ -75,6 +75,30 @@ class _KanbanBoardViewState extends State<KanbanBoardView> {
   /// Card aberto no painel de detalhe (chave estável, ver [_keyOf]).
   String? _selectedKey;
 
+  /// Filtro do quadro: texto (no título, sem case) e marcadores (qualquer um
+  /// dos escolhidos). É estado de TELA, não do arquivo: nada disso vai pro
+  /// `.kanban`, e um reload do disco não o limpa.
+  String _filterText = '';
+  final Set<String> _filterLabels = <String>{};
+
+  bool get _filterActive => _filterText.isNotEmpty || _filterLabels.isNotEmpty;
+
+  bool _matchesFilter(KanbanCard card) {
+    if (_filterText.isNotEmpty &&
+        !card.title.toLowerCase().contains(_filterText.toLowerCase())) {
+      return false;
+    }
+    if (_filterLabels.isNotEmpty && !card.labels.any(_filterLabels.contains)) {
+      return false;
+    }
+    return true;
+  }
+
+  /// Cards visíveis de uma coluna com o índice ORIGINAL preservado: o drop
+  /// insere por posição na lista completa, então filtrar não pode renumerar.
+  Iterable<(int, KanbanCard)> _visibleCards(KanbanColumn column) =>
+      column.cards.indexed.where((e) => _matchesFilter(e.$2));
+
   /// Card com o título em edição inline.
   String? _editingKey;
   final TextEditingController _titleCtrl = TextEditingController();
@@ -637,6 +661,19 @@ class _KanbanBoardViewState extends State<KanbanBoardView> {
             tooltip: tr.manageLabels,
             onTap: () => _showLabelsDialog(context),
           ),
+          const SizedBox(width: 4),
+          // O filtro fica atrás de um botão, não numa barra fixa: a toolbar
+          // do quadro é curta e quem filtra o faz de vez em quando.
+          Builder(
+            builder: (anchor) => _IconAction(
+              icon: _filterActive
+                  ? Icons.filter_alt
+                  : Icons.filter_alt_outlined,
+              tooltip: tr.filter,
+              active: _filterActive,
+              onTap: () => _showFilterPopup(anchor),
+            ),
+          ),
           const SizedBox(width: 8),
           _ViewToggle(
             asList: _asList,
@@ -648,6 +685,33 @@ class _KanbanBoardViewState extends State<KanbanBoardView> {
         ],
       ),
     );
+  }
+
+  /// Popover de filtro ancorado no botão da toolbar. O estado vive aqui no
+  /// quadro (pra sobreviver ao fechar do popover); o popover só edita e avisa.
+  void _showFilterPopup(BuildContext anchor) {
+    final overlay = showPopover<void>(
+      context: anchor,
+      alignment: Alignment.topRight,
+      anchorAlignment: Alignment.bottomRight,
+      offset: const Offset(0, 4),
+      builder: (popupContext) => TapRegion(
+        groupId: _detailTapGroup,
+        child: _FilterPopup(
+          labels: _doc.allLabels,
+          labelColors: _doc.labelColors,
+          text: _filterText,
+          selected: _filterLabels,
+          onChanged: (text, labels) => setState(() {
+            _filterText = text;
+            _filterLabels
+              ..clear()
+              ..addAll(labels);
+          }),
+        ),
+      ),
+    );
+    trackMenuOverlay(overlay);
   }
 
   Future<void> _showLabelsDialog(BuildContext context) async {
@@ -755,7 +819,9 @@ class _KanbanBoardViewState extends State<KanbanBoardView> {
           children: [
             _ColumnHeader(
               name: column.name,
-              count: column.cards.length,
+              count: _filterActive
+                  ? _visibleCards(column).length
+                  : column.cards.length,
               index: index,
               onMenu: (at) => _showColumnMenu(context, index, at),
               onReorder: (from) => _reorderColumn(from, index),
@@ -764,8 +830,8 @@ class _KanbanBoardViewState extends State<KanbanBoardView> {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
                 children: [
-                  for (var c = 0; c < column.cards.length; c++)
-                    _cardSlot(context, column.cards[c], index, c, isLast),
+                  for (final (c, card) in _visibleCards(column))
+                    _cardSlot(context, card, index, c, isLast),
                   // Coluna vazia: só um ícone apagado. A frase "sem cards"
                   // ocupava a largura toda pra dizer o que a ausência de cards
                   // já diz. O texto continua existindo como tooltip, que é o
@@ -909,7 +975,7 @@ class _KanbanBoardViewState extends State<KanbanBoardView> {
                   ),
                   const SizedBox(width: 7),
                   Text(
-                    '${_doc.columns[i].cards.length}',
+                    '${_filterActive ? _visibleCards(_doc.columns[i]).length : _doc.columns[i].cards.length}',
                     style: typo.mono.copyWith(
                       fontSize: 10.5,
                       color: colors.text4,
@@ -919,7 +985,7 @@ class _KanbanBoardViewState extends State<KanbanBoardView> {
               ),
             ),
           ),
-          for (final (index, card) in _doc.columns[i].cards.indexed)
+          for (final (index, card) in _visibleCards(_doc.columns[i]))
             _listSlot(context, card, i, index),
         ],
       ],
@@ -2030,6 +2096,175 @@ class _LabelsDialogState extends State<_LabelsDialog> {
   }
 }
 
+/// Conteúdo do popover de filtro: campo de texto (título) + chips de
+/// marcadores que alternam + limpar. Guarda uma cópia local pra redesenhar os
+/// chips na hora e devolve tudo por [onChanged] a cada mudança.
+class _FilterPopup extends StatefulWidget {
+  const _FilterPopup({
+    required this.labels,
+    required this.labelColors,
+    required this.text,
+    required this.selected,
+    required this.onChanged,
+  });
+
+  final List<String> labels;
+  final Map<String, KanbanLabelColor> labelColors;
+  final String text;
+  final Set<String> selected;
+  final void Function(String text, Set<String> labels) onChanged;
+
+  @override
+  State<_FilterPopup> createState() => _FilterPopupState();
+}
+
+class _FilterPopupState extends State<_FilterPopup> {
+  late final TextEditingController _ctrl = TextEditingController(
+    text: widget.text,
+  );
+  late final Set<String> _selected = {...widget.selected};
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  void _emit() => widget.onChanged(_ctrl.text.trim(), _selected);
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final typo = context.typo;
+    final tr = context.t.cockpit.kanbanView;
+    final hasAny = _ctrl.text.trim().isNotEmpty || _selected.isNotEmpty;
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 240, maxWidth: 320),
+      child: MenuPopup(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  key: const ValueKey('kanban-filter-text'),
+                  controller: _ctrl,
+                  autofocus: true,
+                  placeholder: Text(
+                    tr.filterTitlePlaceholder,
+                    style: typo.body.copyWith(
+                      fontSize: 12.5,
+                      color: colors.text4,
+                    ),
+                  ),
+                  style: typo.body.copyWith(fontSize: 12.5, color: colors.text),
+                  border: Border.all(color: colors.border),
+                  borderRadius: BorderRadius.circular(6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 5,
+                  ),
+                  onChanged: (_) => setState(_emit),
+                ),
+                if (widget.labels.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    tr.filterLabels,
+                    style: typo.mono.copyWith(
+                      fontSize: 10,
+                      letterSpacing: 0.8,
+                      color: colors.text4,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      for (final label in widget.labels)
+                        _FilterLabelChip(
+                          key: ValueKey('kanban-filter-label-$label'),
+                          label: label,
+                          color:
+                              widget.labelColors[label] ??
+                              KanbanLabelColor.gray,
+                          selected: _selected.contains(label),
+                          onTap: () => setState(() {
+                            if (!_selected.remove(label)) _selected.add(label);
+                            _emit();
+                          }),
+                        ),
+                    ],
+                  ),
+                ],
+                if (hasAny) ...[
+                  const SizedBox(height: 10),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: GhostButton(
+                      key: const ValueKey('kanban-filter-clear'),
+                      density: ButtonDensity.compact,
+                      onPressed: () => setState(() {
+                        _ctrl.clear();
+                        _selected.clear();
+                        _emit();
+                      }),
+                      child: Text(tr.filterClear),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Chip de marcador clicável do filtro: contorno quando fora, preenchido
+/// quando selecionado. Mesma paleta do [_LabelChip].
+class _FilterLabelChip extends StatelessWidget {
+  const _FilterLabelChip({
+    super.key,
+    required this.label,
+    required this.color,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final KanbanLabelColor color;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final resolved = kanbanLabelColor(context, color);
+    return HoverTap(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(9),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: selected ? resolved : null,
+          border: Border.all(color: resolved),
+          borderRadius: BorderRadius.circular(9),
+        ),
+        child: Text(
+          label,
+          style: context.typo.mono.copyWith(
+            fontSize: 10.5,
+            color: selected ? context.colors.panel : resolved,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _LabelChip extends StatelessWidget {
   const _LabelChip({required this.label, required this.color});
   final String label;
@@ -2130,12 +2365,17 @@ class _IconAction extends StatelessWidget {
     required this.tooltip,
     required this.onTap,
     this.busy = false,
+    this.active = false,
   });
 
   final IconData icon;
   final String tooltip;
   final VoidCallback onTap;
   final bool busy;
+
+  /// Realça o ícone (accent) quando a ação representa um estado ligado, como
+  /// um filtro aplicado.
+  final bool active;
 
   @override
   Widget build(BuildContext context) {
@@ -2146,7 +2386,15 @@ class _IconAction extends StatelessWidget {
         onTap: busy ? null : onTap,
         padding: const EdgeInsets.all(4),
         borderRadius: BorderRadius.circular(4),
-        child: Icon(icon, size: 14, color: busy ? colors.text4 : colors.text3),
+        child: Icon(
+          icon,
+          size: 14,
+          color: busy
+              ? colors.text4
+              : active
+              ? colors.accent
+              : colors.text3,
+        ),
       ),
     );
   }
