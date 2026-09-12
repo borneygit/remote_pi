@@ -27,6 +27,9 @@ labels: {bug: red, cd: orange, mobile: blue, docs: green, feature: purple, secur
       Cockpit knows the values it injected from .env.cockpit; replace them with *** in the scrollback and in hook output before an agent transcript sees them.
 
 
+- [ ] Kanban: card dependencies (blocked by) <!-- labels: feature -->
+      New `blockedBy: k1, k2` key in the card comment, next to id/labels; references by id (rename-safe), one direction stored, "blocks N" derived on read. Cards get an id when linked. UI: lock chip "blocked by N" that disappears when all blockers reach the last column, "blocks N" on the blocker, a "Blocked by" row in the detail panel with a title picker, and blocked/ready toggles in the filter popover. Moving a blocked card to the last column warns, never forbids. Unknown ids render as grey "unknown"; cycles allowed; dangling refs cleaned when the card is rewritten.
+
 - [ ] Mermaid diagrams <!-- labels: feature -->
       Render ```mermaid blocks in markdown and .html views so the agent can draw flowcharts and sequence diagrams.
 
