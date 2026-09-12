@@ -24,6 +24,26 @@ As versões seguem o `version:` do `pubspec.yaml` (SSOT). O campo `notes` do
     linhas não-vazias — o começo da seção deve fazer sentido sozinho.
 -->
 
+## [1.28.31] - 2026-09-12
+
+**Still a beta for the upcoming 2.0.0.** Kanban boards can be filtered, and
+remote hosts stop reconnecting in the background.
+
+### Added
+
+- **Filter on kanban boards.** A filter button in the board toolbar opens a
+  popover with a title search and label chips. Works in both board and list
+  views; the column counters show the matching cards. The filter is view
+  state and never touches the `.kanban` file.
+
+### Fixed
+
+- **Remote hosts no longer retry in the background.** A host whose tunnel
+  dropped used to spawn an SSH attempt every 30 seconds forever, even while
+  you worked in another workspace. Automatic reconnection now only runs for
+  the host of the selected workspace; switching to it retries immediately.
+  The manual Reconnect button is unchanged.
+
 ## [1.28.30] - 2026-09-12
 
 **Still a beta for the upcoming 2.0.0.** Accents work inside Claude Code and
