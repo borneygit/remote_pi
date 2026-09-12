@@ -7,10 +7,6 @@ labels: {bug: red, cd: orange, mobile: blue, docs: green, feature: purple, secur
 ## Backlog
 
 
-- [ ] Green test suite on main <!-- labels: hygiene -->
-      Four tests already fail on main: two in window_menu_bar_test.dart and two in cockpit_terminal_input_test.dart. 2.0 should ship with the suite passing.
-
-
 - [ ] Consolidated 2.0.0 release notes <!-- labels: docs -->
       Every 1.x since 1.28.0 is a 2.0 beta. Write the single 2.0.0 section from the 1.x changelog entries; it is what Sparkle and the download page will show.
 
@@ -114,4 +110,7 @@ labels: {bug: red, cd: orange, mobile: blue, docs: green, feature: purple, secur
 
 - [x] Drag-and-drop a file into the terminal steals the tab focus <!-- labels: bug -->
       Fixed 2026-09-12: a native drop generates no pointer event and the drag from Finder/Explorer leaves the Cockpit window non-key, so no focus path ran. After injecting the paths the terminal now brings the window to front, focuses its pane in the VM and re-requests the terminal focus node post-frame. Needs a manual check with a real drop after the next release.
+
+- [x] Green test suite on main <!-- labels: hygiene -->
+      Done 2026-09-12: 1412 passing, 0 failing. The two hamburger-menu tests still described the old nested submenus (the menu was flattened on purpose in 64b7e36d) and were rewritten for the flat sections. The two xterm IME tests failed because flutter_test reports Android, where the terminal only opens its text-input connection after a tap (317e6a94); they now pin the desktop platform during the initial pump. No production code changed.
 
