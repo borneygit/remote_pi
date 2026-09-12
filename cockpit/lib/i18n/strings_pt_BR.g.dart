@@ -297,6 +297,8 @@ class _Translations$core$menu$pt_BR extends Translations$core$menu$en {
 	@override String get selectTab => 'Selecionar Aba';
 	@override String tabN({required Object n}) => 'Aba ${n}';
 	@override String get lastTab => 'Última Aba';
+	@override String get previousWorkspace => 'Workspace Anterior';
+	@override String get nextWorkspace => 'Próximo Workspace';
 	@override String get zoomIn => 'Aumentar Zoom';
 	@override String get zoomOut => 'Diminuir Zoom';
 	@override String get actualSize => 'Tamanho Real';
@@ -2066,6 +2068,8 @@ extension on TranslationsPtBr {
 			'core.menu.selectTab' => 'Selecionar Aba',
 			'core.menu.tabN' => ({required Object n}) => 'Aba ${n}',
 			'core.menu.lastTab' => 'Última Aba',
+			'core.menu.previousWorkspace' => 'Workspace Anterior',
+			'core.menu.nextWorkspace' => 'Próximo Workspace',
 			'core.menu.zoomIn' => 'Aumentar Zoom',
 			'core.menu.zoomOut' => 'Diminuir Zoom',
 			'core.menu.actualSize' => 'Tamanho Real',
@@ -2528,10 +2532,10 @@ extension on TranslationsPtBr {
 			'cockpit.dbConnectionDialog.name' => 'Nome',
 			'cockpit.dbConnectionDialog.password' => 'Senha',
 			'cockpit.dbConnectionDialog.savePassword' => 'Salvar senha',
-			'cockpit.dbConnectionDialog.allowWrites' => 'Permitir escrita (agentes)',
-			'cockpit.dbConnectionDialog.allowWritesHint' => 'desligado = agentes só leem via CLI',
 			_ => null,
 		} ?? switch (path) {
+			'cockpit.dbConnectionDialog.allowWrites' => 'Permitir escrita (agentes)',
+			'cockpit.dbConnectionDialog.allowWritesHint' => 'desligado = agentes só leem via CLI',
 			'cockpit.dbConnectionDialog.visibleToAgents' => 'Visível para agentes',
 			'cockpit.dbConnectionDialog.visibleToAgentsHint' => 'desligado = oculto da CLI, só na GUI',
 			'cockpit.dbConnectionDialog.testing' => 'Testando conexão…',
@@ -3042,10 +3046,10 @@ extension on TranslationsPtBr {
 			'settings.remoteHosts.deviceKeyDesc' => 'Adicione esta chave pública ao ~/.ssh/authorized_keys do host para este dispositivo poder conectar.',
 			'settings.remoteHosts.deviceKeyCopy' => 'Copiar chave pública',
 			'settings.remoteHosts.deviceKeyCopied' => 'Chave pública copiada',
-			'settings.remoteHosts.statusConnected' => 'Conectado',
-			'settings.remoteHosts.statusConnecting' => 'Conectando…',
 			_ => null,
 		} ?? switch (path) {
+			'settings.remoteHosts.statusConnected' => 'Conectado',
+			'settings.remoteHosts.statusConnecting' => 'Conectando…',
 			'settings.remoteHosts.statusReconnecting' => 'Reconectando…',
 			'settings.remoteHosts.statusOffline' => 'Offline',
 			'settings.remoteHosts.statusIdle' => 'Não conectado',

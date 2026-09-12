@@ -210,6 +210,32 @@ List<MenuBarMenu> buildAppMenus(
             onSelected: workspace.hasWorkspace ? workspace.selectLastTab : null,
           ),
         ]),
+      // Troca de workspace pelo teclado (⇧⌘N volta, ⇧⌘M avança): N e M são
+      // vizinhas, esquerda/direita. Sem dígitos de propósito: o rail inclui
+      // worktrees e a posição muda o tempo todo; anterior/próximo é estável.
+      // Com Shift, a combinação nunca chega ao terminal (⌃N/⌃M sem Shift
+      // continuam livres pra readline/vim/fzf).
+      if (!isMobilePlatform) const MenuSeparator(),
+      if (!isMobilePlatform)
+        MenuAction(
+          tr.previousWorkspace,
+          accelerator: const MenuAccelerator(
+            LogicalKeyboardKey.keyN,
+            shift: true,
+          ),
+          onSelected: workspace.hasWorkspace
+              ? workspace.previousWorkspace
+              : null,
+        ),
+      if (!isMobilePlatform)
+        MenuAction(
+          tr.nextWorkspace,
+          accelerator: const MenuAccelerator(
+            LogicalKeyboardKey.keyM,
+            shift: true,
+          ),
+          onSelected: workspace.hasWorkspace ? workspace.nextWorkspace : null,
+        ),
       if (!isMobilePlatform) const MenuSeparator(),
       MenuAction(
         tr.zoomIn,

@@ -6,9 +6,6 @@ labels: {bug: red, cd: orange, mobile: blue, docs: green, feature: purple, secur
 
 ## Backlog
 
-- [ ] Decide: macOS sandbox stays off? <!-- labels: decision -->
-      Sandbox is off without a recorded decision. Confirm and document it, or plan the entitlements work.
-
 
 - [ ] Keyboard shortcut to switch between workspaces <!-- labels: feature -->
       Cycle through the rail (previous/next) and jump by position, like Cmd+1..9 for tabs in a browser. Today switching needs a click on the rail.
@@ -66,9 +63,6 @@ labels: {bug: red, cd: orange, mobile: blue, docs: green, feature: purple, secur
       A Help entry inside Cockpit the user can read like a manual: shortcuts, panels, Gallery documents, CLI verbs, remote workspaces.
 
 
-- [ ] Pi extension UI requests are dropped <!-- labels: bug -->
-      extension_ui_request (select/confirm/input/editor) is ignored, so extension wizards hang in the agent tab. Map them to an interactive card and answer through the gateway. Only matters if native agents stay in 2.0.
-
 
 - [ ] Mind map <!-- labels: feature -->
       A mind-map document the agent writes and the user reads and edits.
@@ -108,13 +102,18 @@ labels: {bug: red, cd: orange, mobile: blue, docs: green, feature: purple, secur
 
 - [ ] Multi-window: detach a terminal tab <!-- labels: feature -->
       Needs the PTY hosted outside the window process. The sidecar terminal gateway (remote mode) already does that: make it the default local path, then detaching becomes attaching the same session id in another window. Bonus: terminals survive a UI crash. Decide whether this lands in 2.0 or after.
-- [ ] Decide: do native agents (pi --mode rpc) stay in 2.0? <!-- id: k1 labels: decision -->
-      The enableAgent flag ships off and the terminal is the main path. If they stay, .env.cockpit and Restart must cover the agent tab too, and the UI-request bug above becomes a blocker.
 
-
+- [ ] Remove the native Pi agent (pi --mode rpc) from the binary <!-- labels: feature -->
+      Decided 2026-09-12: the native agent tab is deprecated and leaves in 2.0. Few people use it, the terminal path (claude, codex, pi in a terminal tab with hooks) is the product, and the agent tab never got .env.cockpit, Restart or extension UI requests. Delete the agent tab, the RPC harness (cockpit/data/rpc), the composer, the enableAgent setting and its migration, the pi daemon/cron integration that depends on it, and the i18n keys. Do it LAST, right before the store publications, so nothing else on this board depends on the removal and the binary ships without it. Closes the "Pi extension UI requests are dropped" bug as won't fix.
 
 ## Doing
 
 ## Review
 
 ## Done
+
+- [x] Decide: macOS sandbox stays off? <!-- labels: decision -->
+      Decided 2026-09-12: sandbox stays OFF on desktop, by design. Cockpit spawns shells, git, ssh, pi and LSP servers, reads any project folder and owns a Unix socket; none of that fits the App Sandbox. Sandbox is only required for the Mac App Store, which is out of scope. Hardened Runtime, notarization and TCC prompts stay. Mobile clients (iOS/Android) are sandboxed by the platform and do not run local shells. Follow-up: review whether cs.disable-library-validation is still needed in Release.entitlements.
+
+- [x] Keyboard shortcut to switch between workspaces <!-- labels: feature -->
+      Done 2026-09-12: Cmd+Shift+N (previous) and Cmd+Shift+M (next), Ctrl+Shift on Windows/Linux, in the View menu next to Select Tab. Cycles the rail in visual order (root then its worktrees), wraps around, skips the Cockpit system terminal. No digit shortcuts on purpose: worktrees make positions unstable.

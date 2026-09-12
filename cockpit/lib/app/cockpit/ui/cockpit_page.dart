@@ -369,6 +369,8 @@ class _CockpitPageState extends State<CockpitPage> {
       onToggleFiles: vm.toggleTree,
       onSelectTab: vm.selectTabByIndex,
       onSelectLastTab: vm.selectLastTab,
+      onNextWorkspace: () => vm.cycleWorkspace(1),
+      onPreviousWorkspace: () => vm.cycleWorkspace(-1),
       onFocusPaneLeft: () => vm.focusPaneToward(PaneMove.left),
       onFocusPaneRight: () => vm.focusPaneToward(PaneMove.right),
       onFocusPaneUp: () => vm.focusPaneToward(PaneMove.up),

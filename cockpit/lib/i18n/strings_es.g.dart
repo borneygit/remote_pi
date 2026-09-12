@@ -297,6 +297,8 @@ class _Translations$core$menu$es extends Translations$core$menu$en {
 	@override String get selectTab => 'Seleccionar Pestaña';
 	@override String tabN({required Object n}) => 'Pestaña ${n}';
 	@override String get lastTab => 'Última Pestaña';
+	@override String get previousWorkspace => 'Workspace Anterior';
+	@override String get nextWorkspace => 'Siguiente Workspace';
 	@override String get zoomIn => 'Acercar';
 	@override String get zoomOut => 'Alejar';
 	@override String get actualSize => 'Tamaño Real';
@@ -2066,6 +2068,8 @@ extension on TranslationsEs {
 			'core.menu.selectTab' => 'Seleccionar Pestaña',
 			'core.menu.tabN' => ({required Object n}) => 'Pestaña ${n}',
 			'core.menu.lastTab' => 'Última Pestaña',
+			'core.menu.previousWorkspace' => 'Workspace Anterior',
+			'core.menu.nextWorkspace' => 'Siguiente Workspace',
 			'core.menu.zoomIn' => 'Acercar',
 			'core.menu.zoomOut' => 'Alejar',
 			'core.menu.actualSize' => 'Tamaño Real',
@@ -2528,10 +2532,10 @@ extension on TranslationsEs {
 			'cockpit.dbConnectionDialog.name' => 'Nombre',
 			'cockpit.dbConnectionDialog.password' => 'Contraseña',
 			'cockpit.dbConnectionDialog.savePassword' => 'Guardar contraseña',
-			'cockpit.dbConnectionDialog.allowWrites' => 'Permitir escritura (agentes)',
-			'cockpit.dbConnectionDialog.allowWritesHint' => 'desactivado = los agentes solo leen vía CLI',
 			_ => null,
 		} ?? switch (path) {
+			'cockpit.dbConnectionDialog.allowWrites' => 'Permitir escritura (agentes)',
+			'cockpit.dbConnectionDialog.allowWritesHint' => 'desactivado = los agentes solo leen vía CLI',
 			'cockpit.dbConnectionDialog.visibleToAgents' => 'Visible para agentes',
 			'cockpit.dbConnectionDialog.visibleToAgentsHint' => 'desactivado = oculto en la CLI, solo en la GUI',
 			'cockpit.dbConnectionDialog.testing' => 'Probando conexión…',
@@ -3042,10 +3046,10 @@ extension on TranslationsEs {
 			'settings.remoteHosts.deviceKeyDesc' => 'Añade esta clave pública a ~/.ssh/authorized_keys del host para que este dispositivo pueda conectarse.',
 			'settings.remoteHosts.deviceKeyCopy' => 'Copiar clave pública',
 			'settings.remoteHosts.deviceKeyCopied' => 'Clave pública copiada',
-			'settings.remoteHosts.statusConnected' => 'Conectado',
-			'settings.remoteHosts.statusConnecting' => 'Conectando…',
 			_ => null,
 		} ?? switch (path) {
+			'settings.remoteHosts.statusConnected' => 'Conectado',
+			'settings.remoteHosts.statusConnecting' => 'Conectando…',
 			'settings.remoteHosts.statusReconnecting' => 'Reconectando…',
 			'settings.remoteHosts.statusOffline' => 'Sin conexión',
 			'settings.remoteHosts.statusIdle' => 'No conectado',

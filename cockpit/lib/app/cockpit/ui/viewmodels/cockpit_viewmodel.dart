@@ -53,6 +53,7 @@ import 'package:cockpit/app/cockpit/domain/entities/file_diff.dart';
 import 'package:cockpit/app/cockpit/domain/entities/file_node.dart';
 import 'package:cockpit/app/cockpit/domain/entities/gallery_template.dart';
 import 'package:cockpit/app/core/utils/workspace_env.dart';
+import 'package:cockpit/app/cockpit/domain/services/workspace_cycle.dart';
 import 'package:cockpit/app/cockpit/domain/entities/notebook_document.dart';
 import 'package:cockpit/app/cockpit/domain/entities/file_view.dart';
 import 'package:cockpit/app/cockpit/domain/entities/kanban_document.dart';
@@ -4626,6 +4627,20 @@ class CockpitViewModel extends ChangeNotifier {
     final (paneId, leaf) = focused;
     if (leaf.tabs.isEmpty) return;
     selectTab(paneId, leaf.tabs.last);
+  }
+
+  /// Troca o workspace selecionado pelo vizinho no rail — ⇧⌘M avança, ⇧⌘N
+  /// volta. A ordem é a visual: cada raiz seguida dos seus worktrees, e dá a
+  /// volta nas pontas. O terminal de sistema "Cockpit" fica fora do ciclo.
+  void cycleWorkspace(int delta) {
+    final order = <String>[
+      for (final root in rootProjects) ...[
+        root.id,
+        for (final fork in worktreesOf(root.id)) fork.id,
+      ],
+    ];
+    final next = nextWorkspaceId(order, _selectedProjectId, delta);
+    if (next != null) selectProject(next);
   }
 
   /// Move o foco pra pane vizinha na direção [move] — os atalhos ⌘⌥ + setas.

@@ -442,6 +442,12 @@ class Translations$core$menu$en {
 	/// en: 'Last Tab'
 	String get lastTab => 'Last Tab';
 
+	/// en: 'Previous Workspace'
+	String get previousWorkspace => 'Previous Workspace';
+
+	/// en: 'Next Workspace'
+	String get nextWorkspace => 'Next Workspace';
+
 	/// en: 'Zoom In'
 	String get zoomIn => 'Zoom In';
 
@@ -4223,6 +4229,8 @@ extension on Translations {
 			'core.menu.selectTab' => 'Select Tab',
 			'core.menu.tabN' => ({required Object n}) => 'Tab ${n}',
 			'core.menu.lastTab' => 'Last Tab',
+			'core.menu.previousWorkspace' => 'Previous Workspace',
+			'core.menu.nextWorkspace' => 'Next Workspace',
 			'core.menu.zoomIn' => 'Zoom In',
 			'core.menu.zoomOut' => 'Zoom Out',
 			'core.menu.actualSize' => 'Actual Size',
@@ -4685,10 +4693,10 @@ extension on Translations {
 			'cockpit.dbConnectionDialog.name' => 'Name',
 			'cockpit.dbConnectionDialog.password' => 'Password',
 			'cockpit.dbConnectionDialog.savePassword' => 'Save Password',
-			'cockpit.dbConnectionDialog.allowWrites' => 'Allow writes (agents)',
-			'cockpit.dbConnectionDialog.allowWritesHint' => 'off = agents can only read via CLI',
 			_ => null,
 		} ?? switch (path) {
+			'cockpit.dbConnectionDialog.allowWrites' => 'Allow writes (agents)',
+			'cockpit.dbConnectionDialog.allowWritesHint' => 'off = agents can only read via CLI',
 			'cockpit.dbConnectionDialog.visibleToAgents' => 'Visible to agents',
 			'cockpit.dbConnectionDialog.visibleToAgentsHint' => 'off = hidden from the CLI, GUI only',
 			'cockpit.dbConnectionDialog.testing' => 'Testing connection…',
@@ -5199,10 +5207,10 @@ extension on Translations {
 			'settings.remoteHosts.deviceKeyDesc' => 'Add this public key to ~/.ssh/authorized_keys on the host so this device can connect.',
 			'settings.remoteHosts.deviceKeyCopy' => 'Copy public key',
 			'settings.remoteHosts.deviceKeyCopied' => 'Public key copied',
-			'settings.remoteHosts.statusConnected' => 'Connected',
-			'settings.remoteHosts.statusConnecting' => 'Connecting…',
 			_ => null,
 		} ?? switch (path) {
+			'settings.remoteHosts.statusConnected' => 'Connected',
+			'settings.remoteHosts.statusConnecting' => 'Connecting…',
 			'settings.remoteHosts.statusReconnecting' => 'Reconnecting…',
 			'settings.remoteHosts.statusOffline' => 'Offline',
 			'settings.remoteHosts.statusIdle' => 'Not connected',

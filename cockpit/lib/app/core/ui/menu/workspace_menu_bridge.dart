@@ -20,6 +20,8 @@ class WorkspaceMenuBridge extends ChangeNotifier {
   VoidCallback? _onToggleFiles;
   void Function(int index)? _onSelectTab;
   VoidCallback? _onSelectLastTab;
+  VoidCallback? _onNextWorkspace;
+  VoidCallback? _onPreviousWorkspace;
   VoidCallback? _onFocusPaneLeft;
   VoidCallback? _onFocusPaneRight;
   VoidCallback? _onFocusPaneUp;
@@ -44,6 +46,8 @@ class WorkspaceMenuBridge extends ChangeNotifier {
   void toggleFiles() => _onToggleFiles?.call();
   void selectTab(int index) => _onSelectTab?.call(index);
   void selectLastTab() => _onSelectLastTab?.call();
+  void nextWorkspace() => _onNextWorkspace?.call();
+  void previousWorkspace() => _onPreviousWorkspace?.call();
   void focusPaneLeft() => _onFocusPaneLeft?.call();
   void focusPaneRight() => _onFocusPaneRight?.call();
   void focusPaneUp() => _onFocusPaneUp?.call();
@@ -64,6 +68,8 @@ class WorkspaceMenuBridge extends ChangeNotifier {
     VoidCallback? onToggleFiles,
     void Function(int index)? onSelectTab,
     VoidCallback? onSelectLastTab,
+    VoidCallback? onNextWorkspace,
+    VoidCallback? onPreviousWorkspace,
     VoidCallback? onFocusPaneLeft,
     VoidCallback? onFocusPaneRight,
     VoidCallback? onFocusPaneUp,
@@ -77,6 +83,8 @@ class WorkspaceMenuBridge extends ChangeNotifier {
     _onToggleFiles = onToggleFiles;
     _onSelectTab = onSelectTab;
     _onSelectLastTab = onSelectLastTab;
+    _onNextWorkspace = onNextWorkspace;
+    _onPreviousWorkspace = onPreviousWorkspace;
     _onFocusPaneLeft = onFocusPaneLeft;
     _onFocusPaneRight = onFocusPaneRight;
     _onFocusPaneUp = onFocusPaneUp;

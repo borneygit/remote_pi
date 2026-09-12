@@ -61,6 +61,8 @@
       "selectTab": "Select Tab",
       "tabN": "Tab ${n}",
       "lastTab": "Last Tab",
+      "previousWorkspace": "Previous Workspace",
+      "nextWorkspace": "Next Workspace",
       "zoomIn": "Zoom In",
       "zoomOut": "Zoom Out",
       "actualSize": "Actual Size",

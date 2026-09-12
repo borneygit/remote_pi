@@ -61,6 +61,8 @@
       "selectTab": "Seleccionar Pestaña",
       "tabN": "Pestaña ${n}",
       "lastTab": "Última Pestaña",
+      "previousWorkspace": "Workspace Anterior",
+      "nextWorkspace": "Siguiente Workspace",
       "zoomIn": "Acercar",
       "zoomOut": "Alejar",
       "actualSize": "Tamaño Real",
