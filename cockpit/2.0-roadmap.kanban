@@ -7,10 +7,6 @@ labels: {bug: red, cd: orange, mobile: blue, docs: green, feature: purple, secur
 ## Backlog
 
 
-- [ ] Drag-and-drop a file into the terminal steals the tab focus <!-- labels: bug -->
-      Dropping a file pastes the absolute path correctly, but the terminal tab loses keyboard focus and the user has to click it again before typing.
-
-
 - [ ] Green test suite on main <!-- labels: hygiene -->
       Four tests already fail on main: two in window_menu_bar_test.dart and two in cockpit_terminal_input_test.dart. 2.0 should ship with the suite passing.
 
@@ -115,4 +111,7 @@ labels: {bug: red, cd: orange, mobile: blue, docs: green, feature: purple, secur
 
 - [x] Explicit approval for .env.cockpit in a freshly cloned repo <!-- labels: security -->
       Done 2026-09-12, downscoped: no trust dialog (a cloned repo already runs its own scripts and hooks). Instead: (1) keys that change who runs what are never injected (PATH, SHELL, HOME, ZDOTDIR, BASH_ENV, ENV, PROMPT_COMMAND, IFS, LD_* and DYLD_*); (2) when the .env.cockpit is tracked by git (it came with the repository) new terminals print a yellow notice listing the injected key names, never values.
+
+- [x] Drag-and-drop a file into the terminal steals the tab focus <!-- labels: bug -->
+      Fixed 2026-09-12: a native drop generates no pointer event and the drag from Finder/Explorer leaves the Cockpit window non-key, so no focus path ran. After injecting the paths the terminal now brings the window to front, focuses its pane in the VM and re-requests the terminal focus node post-frame. Needs a manual check with a real drop after the next release.
 

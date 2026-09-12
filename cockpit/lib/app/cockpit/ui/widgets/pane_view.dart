@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
@@ -51,6 +52,7 @@ import 'package:flutter_modular/flutter_modular.dart';
 import 'package:cockpit/app/core/ui/widgets/app_tooltip.dart';
 import 'package:cockpit/i18n/strings.g.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
+import 'package:window_manager/window_manager.dart';
 import 'package:cockpit/app/core/terminal/xterm/xterm.dart';
 import 'package:cockpit/app/core/utils/path_utils.dart';
 
@@ -1469,6 +1471,21 @@ class _PaneBodyState extends State<_PaneBody> {
     });
   }
 
+  /// Drop nativo de arquivo no terminal: o caminho entrou, mas o teclado não
+  /// voltava. Dois motivos, nenhum coberto pelos caminhos de foco existentes:
+  /// (1) o drag veio de outro app (Finder/Explorer), então a janela do Cockpit
+  /// deixou de ser a *key window* e o SO não a reativa ao soltar; (2) soltar
+  /// não gera pointer-down, então nem o `Listener` do pane nem o
+  /// [_grantsKeyboardOnPointerDown] rodam. O usuário tinha que clicar de novo
+  /// antes de digitar. Aqui: janela de volta ao primeiro plano, pane focado na
+  /// VM (bumpa a geração) e o node do terminal re-pedido no pós-frame.
+  void _onFileDropped() {
+    if (!_wantsTerminalFocus) return;
+    if (!isMobilePlatform) unawaited(windowManager.focus());
+    context.read<CockpitViewModel>().focus(widget.paneId);
+    _requestTerminalFocusSoon();
+  }
+
   /// Envolve o terminal num [Listener] que **devolve o teclado ao próprio
   /// node** no pointer-down.
   ///
@@ -1727,6 +1744,7 @@ class _PaneBodyState extends State<_PaneBody> {
       return _grantsKeyboardOnPointerDown(
         _TerminalDropTarget(
           session: item,
+          onDropped: _onFileDropped,
           child: ColoredBox(
             color: context.colors.panel,
             child: Padding(
@@ -1952,7 +1970,15 @@ class _OpenTabDropTargetState extends State<_OpenTabDropTarget> {
 /// itens vêm separados por espaço). Mostra uma borda accent enquanto o item
 /// paira sobre a área — sinal de que vai aceitar o drop.
 class _TerminalDropTarget extends StatefulWidget {
-  const _TerminalDropTarget({required this.session, required this.child});
+  const _TerminalDropTarget({
+    required this.session,
+    required this.child,
+    this.onDropped,
+  });
+
+  /// Chamado depois de injetar os caminhos: o dono do foco devolve o teclado
+  /// ao terminal (o drop nativo não gera pointer-down nenhum no Flutter).
+  final VoidCallback? onDropped;
 
   final TerminalSession session;
   final Widget child;
@@ -1981,6 +2007,7 @@ class _TerminalDropTargetState extends State<_TerminalDropTarget> {
     if (paths.isEmpty) return;
     // Espaço final pra separar de um próximo argumento; o usuário pode apagar.
     widget.session.insertText('${paths.join(' ')} ');
+    widget.onDropped?.call();
   }
 
   /// Este DropTarget é o que está de fato sob o ponto do drop? Faz um hit-test
