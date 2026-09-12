@@ -8,7 +8,7 @@ labels: {bug: red, cd: orange, mobile: blue, docs: green, feature: purple, secur
 
 
 
-- [ ] Document the new features on the Cockpit page of the site <!-- labels: docs -->
+- [ ] Document the new features on the Cockpit page of the site <!-- id: k2 labels: docs -->
       `../site`: .env.cockpit, Restart tab, Neovim, workspace CLI, remote hosts, Gallery documents, Database panel and everything else that shipped since the page was last updated.
 
 
@@ -16,55 +16,55 @@ labels: {bug: red, cd: orange, mobile: blue, docs: green, feature: purple, secur
       Application submitted on signpath.org (MIT license added 2026-07-30). Once approved, integrate signing into the windows job of cockpit-release.yml. Unsigned builds keep triggering SmartScreen.
 
 
-- [ ] Excalidraw <!-- labels: feature -->
+- [ ] Excalidraw <!-- id: k4 labels: feature -->
       Embed Excalidraw as a whiteboard document (.excalidraw) for sketches and architecture drawings.
 
 
-- [ ] In-app Help section (user manual) <!-- labels: docs, feature -->
+- [ ] In-app Help section (user manual) <!-- id: k5 labels: docs, feature -->
       A Help entry inside Cockpit the user can read like a manual: shortcuts, panels, Gallery documents, CLI verbs, remote workspaces.
 
 
 
 
-- [ ] "Open with Cockpit" from the OS file manager <!-- labels: feature -->
+- [ ] "Open with Cockpit" from the OS file manager <!-- id: k6 labels: feature -->
       Document-type association (Info.plist on macOS, extension registration on Windows/Linux) plus the open-file handler: opens a lightweight file window without showing the full workspace.
 
 
-- [ ] Android CD pipeline <!-- labels: cd, mobile -->
+- [ ] Android CD pipeline <!-- id: k7 labels: cd, mobile -->
       GitHub Actions job that builds and signs the Android app on tag, like the macOS/Windows/Linux jobs in cockpit-release.yml.
 
 
-- [ ] Test on a physical Android device <!-- labels: mobile -->
+- [ ] Test on a physical Android device <!-- id: k8 labels: mobile blockedBy: k7, k14 -->
 
 
-- [ ] Test on iOS (iPad) <!-- labels: mobile -->
+- [ ] Test on iOS (iPad) <!-- id: k9 labels: mobile blockedBy: k14 -->
 
 
-- [ ] Multi-window: detach a file tab into its own window <!-- labels: feature -->
+- [ ] Multi-window: detach a file tab into its own window <!-- id: k10 labels: feature -->
       Viewer, .kanban, .html, .http, .dbq and diff tabs carry only a path and a mode, so a second window can rebuild them. Each Flutter window is a separate engine/isolate: state crosses only as messages. This slice gives most of the two-monitor value.
 
 
-- [ ] Publish on Google Play <!-- labels: cd, mobile -->
+- [ ] Publish on Google Play <!-- id: k11 labels: cd, mobile blockedBy: k8, k16 -->
 
 
-- [ ] Publish on the App Store <!-- labels: cd, mobile -->
+- [ ] Publish on the App Store <!-- id: k12 labels: cd, mobile blockedBy: k9, k16 -->
 
 
-- [ ] Remote workspace redesign (plan 58) <!-- labels: feature -->
+- [ ] Remote workspace redesign (plan 58) <!-- id: k13 labels: feature -->
       Remote workspace = a host folder with worktrees, git and file tree like local; pick the folder when connecting; the "+" becomes a Local/Remote menu instead of a fixed button.
 
 
-- [ ] Mobile client usable (plan 59, waves 1+) <!-- labels: mobile -->
+- [ ] Mobile client usable (plan 59, waves 1+) <!-- id: k14 labels: mobile -->
       Wave 0 done (iOS/Android projects, landscape). The Android/iOS test and store cards depend on the remote client being usable on a tablet.
 
 
-- [ ] Multi-window: detach a terminal tab <!-- labels: feature -->
+- [ ] Multi-window: detach a terminal tab <!-- id: k15 labels: feature blockedBy: k10 -->
       Needs the PTY hosted outside the window process. The sidecar terminal gateway (remote mode) already does that: make it the default local path, then detaching becomes attaching the same session id in another window. Bonus: terminals survive a UI crash. Decide whether this lands in 2.0 or after.
 
-- [ ] Consolidated 2.0.0 release notes <!-- id: k1 labels: docs -->
+- [ ] Consolidated 2.0.0 release notes <!-- id: k1 labels: docs blockedBy: k16, k2 -->
       Every 1.x since 1.28.0 is a 2.0 beta. Write the single 2.0.0 section from the 1.x changelog entries; it is what Sparkle and the download page will show.
 
-- [ ] Remove the native Pi agent (pi --mode rpc) from the binary <!-- labels: feature -->
+- [ ] Remove the native Pi agent (pi --mode rpc) from the binary <!-- id: k16 labels: feature -->
       Decided 2026-09-12: the native agent tab is deprecated and leaves in 2.0. Few people use it, the terminal path (claude, codex, pi in a terminal tab with hooks) is the product, and the agent tab never got .env.cockpit, Restart or extension UI requests. Delete the agent tab, the RPC harness (cockpit/data/rpc), the composer, the enableAgent setting and its migration, the pi daemon/cron integration that depends on it, and the i18n keys. Do it LAST, right before the store publications, so nothing else on this board depends on the removal and the binary ships without it. Closes the "Pi extension UI requests are dropped" bug as won't fix.
 
 ## Doing
