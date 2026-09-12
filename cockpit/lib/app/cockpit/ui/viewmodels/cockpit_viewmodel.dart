@@ -54,6 +54,7 @@ import 'package:cockpit/app/cockpit/domain/entities/file_node.dart';
 import 'package:cockpit/app/cockpit/domain/entities/gallery_template.dart';
 import 'package:cockpit/app/core/utils/workspace_env.dart';
 import 'package:cockpit/app/cockpit/domain/services/workspace_cycle.dart';
+import 'package:cockpit/i18n/strings.g.dart' as slang;
 import 'package:cockpit/app/cockpit/domain/entities/notebook_document.dart';
 import 'package:cockpit/app/cockpit/domain/entities/file_view.dart';
 import 'package:cockpit/app/cockpit/domain/entities/kanban_document.dart';
@@ -5478,7 +5479,51 @@ class CockpitViewModel extends ChangeNotifier {
     // Restauração: re-arma a trava de nome sem notificar (aba ainda não montada).
     if (manualLabel != null) t.restoreManualLabel(manualLabel);
     _sessions[t.id] = t;
+    if (!_isRemoteWorkspace(projectId)) _warnTrackedWorkspaceEnv(t, projectId);
     return t;
+  }
+
+  /// Cache por root: o `.env.cockpit` está rastreado pelo git? Um arquivo
+  /// comitado veio do repositório (clone), não do usuário, e merece aviso.
+  final Map<String, bool> _trackedWorkspaceEnv = <String, bool>{};
+
+  /// Escreve no terminal uma linha amarela com as chaves injetadas quando o
+  /// `.env.cockpit` de alguma root do workspace é rastreado pelo git. Só
+  /// nomes, nunca valores. Best-effort e assíncrono: o spawn é síncrono e um
+  /// `git ls-files` de poucos ms cabe antes do prompt do shell de login.
+  void _warnTrackedWorkspaceEnv(TerminalSession t, String projectId) {
+    final path = _projectById(projectId)?.path ?? '';
+    if (path.isEmpty) return;
+    final roots = workspaceEnvRootsWithFile(<String>{
+      path,
+      ...rootsOf(projectId),
+    });
+    if (roots.isEmpty) return;
+    unawaited(() async {
+      final tracked = <String>[];
+      for (final root in roots) {
+        var isTracked = _trackedWorkspaceEnv[root];
+        if (isTracked == null) {
+          final (code, _) = await git.output(root, [
+            'ls-files',
+            '--error-unmatch',
+            '--',
+            kWorkspaceEnvFileName,
+          ]);
+          isTracked = code == 0;
+          _trackedWorkspaceEnv[root] = isTracked;
+        }
+        if (isTracked) tracked.add(root);
+      }
+      if (tracked.isEmpty || _sessions[t.id] != t) return;
+      final keys = loadWorkspaceEnvSync(tracked).keys.join(', ');
+      // Fora da árvore de widgets: `t` global é o acesso certo (regra i18n).
+      t.terminal.write(
+        '\x1b[33m'
+        '${slang.t.cockpit.terminal.workspaceEnvTracked(keys: keys)}'
+        '\x1b[0m\r\n',
+      );
+    }());
   }
 
   /// Variáveis do `.env.cockpit` de um workspace local: a raiz do workspace e,

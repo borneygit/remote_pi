@@ -718,7 +718,8 @@
       "agentCrashed": "Agent stopped unexpectedly"
     },
     "terminal": {
-      "cwdFallbackWarning": "Warning: the folder \"${requested}\" does not exist. This terminal opened in \"${path}\"."
+      "cwdFallbackWarning": "Warning: the folder \"${requested}\" does not exist. This terminal opened in \"${path}\".",
+      "workspaceEnvTracked": "Notice: .env.cockpit is tracked by git (it came with the repository). Injected: ${keys}"
     },
     "remoteHost": {
       "addHost": "Add remote host",

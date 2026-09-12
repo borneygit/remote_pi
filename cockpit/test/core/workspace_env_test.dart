@@ -37,6 +37,17 @@ void main() {
       expect(env, {'OK': '1'});
     });
 
+    test('chaves perigosas nunca entram, mesmo válidas sintaticamente', () {
+      final env = parseWorkspaceEnv(
+        'PATH=/evil\nLD_PRELOAD=x.so\nDYLD_INSERT_LIBRARIES=y\n'
+        'LD_WHATEVER=z\nSHELL=/bin/evil\nAPI_TOKEN=ok\n',
+      );
+      expect(env, {'API_TOKEN': 'ok'});
+      expect(isBlockedWorkspaceEnvKey('PATH'), isTrue);
+      expect(isBlockedWorkspaceEnvKey('Path'), isFalse);
+      expect(isBlockedWorkspaceEnvKey('API_PATH'), isFalse);
+    });
+
     test('CRLF', () {
       expect(parseWorkspaceEnv('A=1\r\nB=2\r\n'), {'A': '1', 'B': '2'});
     });
@@ -48,6 +59,13 @@ void main() {
       tmp = await Directory.systemTemp.createTemp('ws-env-');
     });
     tearDown(() => tmp.delete(recursive: true));
+
+    test('workspaceEnvRootsWithFile lista só as pastas com arquivo', () async {
+      final a = await Directory('${tmp.path}/a').create();
+      final b = await Directory('${tmp.path}/b').create();
+      await File('${a.path}/$kWorkspaceEnvFileName').writeAsString('X=1');
+      expect(workspaceEnvRootsWithFile([a.path, b.path, '']), [a.path]);
+    });
 
     test(
       'funde roots na ordem, última vence; pasta sem arquivo é ignorada',

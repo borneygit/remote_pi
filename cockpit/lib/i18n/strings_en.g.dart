@@ -2338,6 +2338,9 @@ class Translations$cockpit$terminal$en {
 
 	/// en: 'Warning: the folder "${requested}" does not exist. This terminal opened in "${path}".'
 	String cwdFallbackWarning({required Object requested, required Object path}) => 'Warning: the folder "${requested}" does not exist. This terminal opened in "${path}".';
+
+	/// en: 'Notice: .env.cockpit is tracked by git (it came with the repository). Injected: ${keys}'
+	String workspaceEnvTracked({required Object keys}) => 'Notice: .env.cockpit is tracked by git (it came with the repository). Injected: ${keys}';
 }
 
 // Path: cockpit.remoteHost
@@ -4787,6 +4790,7 @@ extension on Translations {
 			'cockpit.notifications.agentNeedsAction' => 'Agent needs your input',
 			'cockpit.notifications.agentCrashed' => 'Agent stopped unexpectedly',
 			'cockpit.terminal.cwdFallbackWarning' => ({required Object requested, required Object path}) => 'Warning: the folder "${requested}" does not exist. This terminal opened in "${path}".',
+			'cockpit.terminal.workspaceEnvTracked' => ({required Object keys}) => 'Notice: .env.cockpit is tracked by git (it came with the repository). Injected: ${keys}',
 			'cockpit.remoteHost.addHost' => 'Add remote host',
 			'cockpit.remoteHost.hostName' => 'Name',
 			'cockpit.remoteHost.sshTarget' => 'SSH target (user@host)',
@@ -5206,9 +5210,9 @@ extension on Translations {
 			'settings.remoteHosts.deviceKeyTitle' => 'This device\'s key',
 			'settings.remoteHosts.deviceKeyDesc' => 'Add this public key to ~/.ssh/authorized_keys on the host so this device can connect.',
 			'settings.remoteHosts.deviceKeyCopy' => 'Copy public key',
-			'settings.remoteHosts.deviceKeyCopied' => 'Public key copied',
 			_ => null,
 		} ?? switch (path) {
+			'settings.remoteHosts.deviceKeyCopied' => 'Public key copied',
 			'settings.remoteHosts.statusConnected' => 'Connected',
 			'settings.remoteHosts.statusConnecting' => 'Connecting…',
 			'settings.remoteHosts.statusReconnecting' => 'Reconnecting…',

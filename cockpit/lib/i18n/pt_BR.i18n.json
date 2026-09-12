@@ -718,7 +718,8 @@
       "agentCrashed": "Agente parou inesperadamente"
     },
     "terminal": {
-      "cwdFallbackWarning": "Aviso: a pasta \"${requested}\" não existe. Este terminal abriu em \"${path}\"."
+      "cwdFallbackWarning": "Aviso: a pasta \"${requested}\" não existe. Este terminal abriu em \"${path}\".",
+      "workspaceEnvTracked": "Aviso: o .env.cockpit está rastreado pelo git (veio com o repositório). Injetado: ${keys}"
     },
     "remoteHost": {
       "addHost": "Adicionar host remoto",

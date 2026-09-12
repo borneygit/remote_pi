@@ -718,7 +718,8 @@
       "agentCrashed": "El agente se detuvo inesperadamente"
     },
     "terminal": {
-      "cwdFallbackWarning": "Aviso: la carpeta \"${requested}\" no existe. Esta terminal se abrió en \"${path}\"."
+      "cwdFallbackWarning": "Aviso: la carpeta \"${requested}\" no existe. Esta terminal se abrió en \"${path}\".",
+      "workspaceEnvTracked": "Aviso: el .env.cockpit está rastreado por git (vino con el repositorio). Inyectado: ${keys}"
     },
     "remoteHost": {
       "addHost": "Añadir host remoto",

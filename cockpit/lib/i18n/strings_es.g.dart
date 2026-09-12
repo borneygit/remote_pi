@@ -1156,6 +1156,7 @@ class _Translations$cockpit$terminal$es extends Translations$cockpit$terminal$en
 
 	// Translations
 	@override String cwdFallbackWarning({required Object requested, required Object path}) => 'Aviso: la carpeta "${requested}" no existe. Esta terminal se abrió en "${path}".';
+	@override String workspaceEnvTracked({required Object keys}) => 'Aviso: el .env.cockpit está rastreado por git (vino con el repositorio). Inyectado: ${keys}';
 }
 
 // Path: cockpit.remoteHost
@@ -2626,6 +2627,7 @@ extension on TranslationsEs {
 			'cockpit.notifications.agentNeedsAction' => 'El agente necesita tu acción',
 			'cockpit.notifications.agentCrashed' => 'El agente se detuvo inesperadamente',
 			'cockpit.terminal.cwdFallbackWarning' => ({required Object requested, required Object path}) => 'Aviso: la carpeta "${requested}" no existe. Esta terminal se abrió en "${path}".',
+			'cockpit.terminal.workspaceEnvTracked' => ({required Object keys}) => 'Aviso: el .env.cockpit está rastreado por git (vino con el repositorio). Inyectado: ${keys}',
 			'cockpit.remoteHost.addHost' => 'Añadir host remoto',
 			'cockpit.remoteHost.hostName' => 'Nombre',
 			'cockpit.remoteHost.sshTarget' => 'Destino SSH (usuario@host)',
@@ -3045,9 +3047,9 @@ extension on TranslationsEs {
 			'settings.remoteHosts.deviceKeyTitle' => 'Clave de este dispositivo',
 			'settings.remoteHosts.deviceKeyDesc' => 'Añade esta clave pública a ~/.ssh/authorized_keys del host para que este dispositivo pueda conectarse.',
 			'settings.remoteHosts.deviceKeyCopy' => 'Copiar clave pública',
-			'settings.remoteHosts.deviceKeyCopied' => 'Clave pública copiada',
 			_ => null,
 		} ?? switch (path) {
+			'settings.remoteHosts.deviceKeyCopied' => 'Clave pública copiada',
 			'settings.remoteHosts.statusConnected' => 'Conectado',
 			'settings.remoteHosts.statusConnecting' => 'Conectando…',
 			'settings.remoteHosts.statusReconnecting' => 'Reconectando…',
