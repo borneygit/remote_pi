@@ -60,6 +60,9 @@ fn main() {
         "list-tasks" => commands::list("list-tasks", args),
         "read-tab" | "read-pane" => commands::read("read-pane", args),
         "read-task" => commands::read("read-task", args),
+        "run-task" | "stop-task" | "restart-task" | "send-task-key" => {
+            commands::task(first, args)
+        }
         "db" => commands::db(args),
         "http" => commands::http(args),
         "redis" => commands::redis(args),

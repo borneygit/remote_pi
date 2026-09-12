@@ -214,7 +214,26 @@ Cockpit tabs (it is not on the global PATH).
   `source` (detected|manual), `running`, `hasOutput` (`read-task` has output
   to read). Ids are stable per workspace: `npm:<script>` (package.json
   scripts), `flutter:run`/`flutter:test`, `json:<label>`
-  (`.cockpit/tasks.json`).
+  (`.cockpit/tasks.json`). With `--json` each task also lists its `profiles`
+  and interactive `keys`.
+- `cockpit run-task <task-id> [--profile <name>] [--restart]`,
+  `cockpit stop-task <task-id>`, `cockpit restart-task <task-id>`,
+  `cockpit send-task-key <task-id> <key>` — drive the **Tasks panel** from a
+  tab: start a task (fails if already running unless `--restart`), stop it,
+  restart it with the same profile, or write an interactive key to its stdin
+  (`r` = hot reload, `R` = hot restart on Flutter; the keys come from
+  `list-tasks --json`). Same runner the human sees in the panel, so state and
+  output stay in sync; works on local and remote workspaces (the task runs
+  where the workspace lives). Prefer `send-task-key` over a restart when the
+  task offers a reload key — it is what the human would press.
+
+  ```sh
+  cockpit list-tasks --json                 # ids, profiles, keys
+  cockpit run-task npm:dev                  # start the dev server
+  cockpit send-task-key flutter:run r       # hot reload after an edit
+  cockpit restart-task npm:dev              # config changed, reload won't do
+  cockpit read-task npm:dev --lines 40      # check what it printed
+  ```
 - `cockpit list-tabs [--json]` (alias: `list-panes`) — active tabs: `id`,
   `kind` (terminal|agent|file|task), `title` (dynamic), `label` (manual stable
   name, or null), `workspaceId` (opaque UUID), `workspacePath` (workspace root

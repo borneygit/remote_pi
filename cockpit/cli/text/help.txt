@@ -17,6 +17,10 @@ USAGE:
   cockpit list-tabs       [--json]             list active tabs (alias: list-panes)
   cockpit list-workspaces [--json]             list workspaces (projects)
   cockpit list-tasks      [--json]             list this workspace's tasks (Task Run)
+  cockpit run-task <task-id> [--profile <p>] [--restart]   start a task
+  cockpit stop-task <task-id>                  stop a running task
+  cockpit restart-task <task-id>               stop + start (same profile)
+  cockpit send-task-key <task-id> <key>        write an interactive key (e.g. r)
   cockpit new-tab [--cwd <dir>] [--title <name>] [--split h|v]
                                                open a new terminal tab (prints its id)
   cockpit close-tab [<label|tab-id>]           close a tab (default: the current
@@ -51,12 +55,15 @@ READ (read-tab / read-task):
   read-tab without a target reads the CURRENT tab; a target may be a stable
   tab label or a tab-id.
 
-TASKS (list-tasks / read-task):
+TASKS (list-tasks / read-task / run-task / stop-task / restart-task / send-task-key):
   Task ids are stable per workspace: npm:<script> (package.json), flutter:run /
   flutter:test, json:<label> (.cockpit/tasks.json). Discover them with
   `cockpit list-tasks` — `[output]` marks tasks whose output `read-task` can
   read (ran this boot); ● marks tasks running right now. Task-output tabs in
   `list-tabs --json` also carry the task id as `taskId`.
+  run/stop/restart/send-task-key drive the same runner as the Tasks panel, on
+  local and remote workspaces alike. `list-tasks --json` lists each task's
+  `profiles` and interactive `keys`.
 
 DATABASES (db):
   Connections live per workspace in .cockpit/databases.json (+ auto-detected

@@ -807,6 +807,84 @@ fn value_to_display(v: &Value) -> String {
     }
 }
 
+// ---- run-task / stop-task / restart-task / send-task-key -------------------
+
+const TASK_HELP: &str = "cockpit run-task <task-id> [--profile <name>] [--restart] [--json]
+cockpit stop-task <task-id> [--json]
+cockpit restart-task <task-id> [--json]
+cockpit send-task-key <task-id> <key> [--json]
+
+Drive the Tasks panel from a tab: start, stop or restart a task, or write an
+interactive key (e.g. `r` = hot reload on Flutter) to a running task's stdin.
+Task ids and their profiles/keys come from `cockpit list-tasks --json`.
+Works on local and remote workspaces (the task runs where the workspace is).
+`run-task` on a task that is already running fails unless `--restart`.
+Prints `{\"taskId\":…,\"running\":…}`.";
+
+pub fn task(cmd: &str, args: &[String]) -> ! {
+    let parsed = Flags::parse(args);
+    if args.iter().any(|a| a == "--help" || a == "-h") {
+        println!("{TASK_HELP}");
+        std::process::exit(0);
+    }
+    // Positionals sem o valor de `--profile` (o Flags genérico não o consome).
+    let mut positionals: Vec<String> = Vec::new();
+    let mut skip = false;
+    for a in &parsed.positionals {
+        if skip {
+            skip = false;
+            continue;
+        }
+        if a == "--profile" {
+            skip = true;
+            continue;
+        }
+        positionals.push(a.clone());
+    }
+    let target = positionals.first().cloned().unwrap_or_default();
+    if target.is_empty() {
+        die(&format!("cockpit {cmd}: missing task id"), 2);
+    }
+    let mut cmd_args = Map::new();
+    cmd_args.insert("target".into(), json!(target));
+    if cmd == "send-task-key" {
+        match positionals.get(1) {
+            Some(k) if !k.is_empty() => {
+                cmd_args.insert("key".into(), json!(k));
+            }
+            _ => die("cockpit send-task-key: missing key", 2),
+        }
+    }
+    // `--profile <name>`: o parser genérico não conhece a flag, então o valor
+    // seria lido como posicional; pega aqui e tira dos positionals.
+    if let Some(i) = args.iter().position(|a| a == "--profile") {
+        match args.get(i + 1) {
+            Some(p) if !p.is_empty() && !p.starts_with("--") => {
+                cmd_args.insert("profile".into(), json!(p));
+            }
+            _ => die("cockpit run-task: --profile needs a name", 2),
+        }
+    }
+    if args.iter().any(|a| a == "--restart") {
+        cmd_args.insert("restart".into(), json!(true));
+    }
+    let mut req = json!({"cmd": cmd, "args": Value::Object(cmd_args)});
+    // O workspace da task é o da tab emissora ($COCKPIT_TAB_ID ou --tab-id).
+    with_tab_id(&mut req, parsed.effective_tab_id());
+    let resp = transport::request(req, DEFAULT_TIMEOUT);
+    if !is_ok(&resp) {
+        fail_with(&resp);
+    }
+    let data = resp.get("data").cloned().unwrap_or_else(|| json!({}));
+    if parsed.json {
+        println!("{}", data);
+    } else {
+        let running = data.get("running").and_then(|v| v.as_bool()).unwrap_or(false);
+        println!("{target}: {}", if running { "running" } else { "stopped" });
+    }
+    std::process::exit(0)
+}
+
 // ---- read-tab / read-task ---------------------------------------------------
 
 pub fn read(cmd: &str, args: &[String]) -> ! {

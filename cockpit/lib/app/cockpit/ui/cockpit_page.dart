@@ -10,6 +10,7 @@ import 'package:cockpit/app/cockpit/ui/actions/workspace_actions.dart';
 import 'package:cockpit/app/cockpit/ui/actions/worktree_actions.dart';
 import 'package:cockpit/app/core/app_intents.dart';
 import 'package:cockpit/app/cockpit/domain/entities/project.dart';
+import 'package:cockpit/app/cockpit/domain/entities/remote_host.dart';
 import 'package:cockpit/app/core/domain/entities/app_settings.dart';
 import 'package:cockpit/app/core/domain/entities/automation.dart';
 import 'package:cockpit/app/core/domain/exceptions/neovim_error.dart';
@@ -283,6 +284,11 @@ class _CockpitPageState extends State<CockpitPage> {
     // Task Run remoto (plano 58): descoberta via fs.read + execução via terminal
     // do host, roteados quando o workspace ativo é remoto.
     context.read<TasksViewModel>().remoteContextFor = _remoteTaskContextFor;
+    // A CLI (`cockpit run-task` etc.) resolve pelo id do workspace da aba
+    // emissora, não pelo selecionado — agente numa aba de host remoto dirige
+    // as tasks daquele host. Mesmo cache por host do painel.
+    _vm.remoteTaskContextFor = (wsId) =>
+        _remoteTaskContextForHost(_vm.remoteHostForWorkspace(wsId));
   }
 
   /// Contexto de Task remoto do workspace ativo (host resolvido do projeto
@@ -293,8 +299,12 @@ class _CockpitPageState extends State<CockpitPage> {
 
   ({TaskDiscovery discovery, TaskRunnerGateway runner})? _remoteTaskContextFor(
     String cwd,
-  ) {
-    final host = _vm.remoteHostForWorkspace(_vm.selectedProjectId);
+  ) => _remoteTaskContextForHost(
+    _vm.remoteHostForWorkspace(_vm.selectedProjectId),
+  );
+
+  ({TaskDiscovery discovery, TaskRunnerGateway runner})?
+  _remoteTaskContextForHost(RemoteHost? host) {
     if (host == null) return null;
     return _remoteTaskCtx.putIfAbsent(host.id, () {
       final runner = RemoteTaskRunner(

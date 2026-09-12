@@ -705,6 +705,12 @@ class CockpitViewModel extends ChangeNotifier {
 
   /// Handler da CLI interna `cockpit` — colaborador extraído; criado aqui
   /// (e não no módulo) porque referencia o próprio VM.
+  /// Fábrica de contexto de tasks remoto pra CLI (mesma da página/painel).
+  set remoteTaskContextFor(
+    ({TaskDiscovery discovery, TaskRunnerGateway runner})? Function(String)?
+    factory,
+  ) => _cli.remoteContextFor = factory;
+
   late final CockpitCliHandler _cli = CockpitCliHandler(
     this,
     _dbService,
