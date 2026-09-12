@@ -6,85 +6,112 @@ labels: {bug: red, cd: orange, mobile: blue, docs: green, feature: purple, secur
 
 ## Backlog
 
-- [ ] Drag-and-drop a file into the terminal steals the tab focus <!-- labels: bug -->
-      Dropping a file pastes the absolute path correctly, but the terminal tab loses keyboard focus and the user has to click it again before typing.
+- [ ] Decide: macOS sandbox stays off? <!-- labels: decision -->
+      Sandbox is off without a recorded decision. Confirm and document it, or plan the entitlements work.
 
-- [ ] Android CD pipeline <!-- labels: cd, mobile -->
-      GitHub Actions job that builds and signs the Android app on tag, like the macOS/Windows/Linux jobs in cockpit-release.yml.
-
-- [ ] Test on a physical Android device <!-- labels: mobile -->
-
-- [ ] Publish on Google Play <!-- labels: cd, mobile -->
-
-- [ ] Test on iOS (iPad) <!-- labels: mobile -->
-
-- [ ] Publish on the App Store <!-- labels: cd, mobile -->
-
-- [ ] Document the new features on the Cockpit page of the site <!-- labels: docs -->
-      `../site`: .env.cockpit, Restart tab, Neovim, workspace CLI, remote hosts, Gallery documents, Database panel and everything else that shipped since the page was last updated.
-
-- [ ] In-app Help section (user manual) <!-- labels: docs, feature -->
-      A Help entry inside Cockpit the user can read like a manual: shortcuts, panels, Gallery documents, CLI verbs, remote workspaces.
-
-- [ ] Mermaid diagrams <!-- labels: feature -->
-      Render ```mermaid blocks in markdown and .html views so the agent can draw flowcharts and sequence diagrams.
-
-- [ ] Mind map <!-- labels: feature -->
-      A mind-map document the agent writes and the user reads and edits.
-
-- [ ] Excalidraw <!-- labels: feature -->
-      Embed Excalidraw as a whiteboard document (.excalidraw) for sketches and architecture drawings.
-
-- [ ] Multi-window: detach a file tab into its own window <!-- labels: feature -->
-      Viewer, .kanban, .html, .http, .dbq and diff tabs carry only a path and a mode, so a second window can rebuild them. Each Flutter window is a separate engine/isolate: state crosses only as messages. This slice gives most of the two-monitor value.
-
-- [ ] Multi-window: detach a terminal tab <!-- labels: feature -->
-      Needs the PTY hosted outside the window process. The sidecar terminal gateway (remote mode) already does that: make it the default local path, then detaching becomes attaching the same session id in another window. Bonus: terminals survive a UI crash. Decide whether this lands in 2.0 or after.
-
-- [ ] "Open with Cockpit" from the OS file manager <!-- labels: feature -->
-      Document-type association (Info.plist on macOS, extension registration on Windows/Linux) plus the open-file handler: opens a lightweight file window without showing the full workspace.
 
 - [ ] Keyboard shortcut to switch between workspaces <!-- labels: feature -->
       Cycle through the rail (previous/next) and jump by position, like Cmd+1..9 for tabs in a browser. Today switching needs a click on the rail.
 
-- [ ] Windows code signing via SignPath OSS <!-- labels: cd -->
-      Application submitted on signpath.org (MIT license added 2026-07-30). Once approved, integrate signing into the windows job of cockpit-release.yml. Unsigned builds keep triggering SmartScreen.
-
-- [ ] Consolidated 2.0.0 release notes <!-- labels: docs -->
-      Every 1.x since 1.28.0 is a 2.0 beta. Write the single 2.0.0 section from the 1.x changelog entries; it is what Sparkle and the download page will show.
-
-- [ ] Validate self-update on Windows end to end <!-- labels: cd -->
-      WinSparkle is wired but was never verified on a real machine: appcast, signature check, silent restart.
-
-- [ ] Remote workspace redesign (plan 58) <!-- labels: feature -->
-      Remote workspace = a host folder with worktrees, git and file tree like local; pick the folder when connecting; the "+" becomes a Local/Remote menu instead of a fixed button.
-
-- [ ] Mobile client usable (plan 59, waves 1+) <!-- labels: mobile -->
-      Wave 0 done (iOS/Android projects, landscape). The Android/iOS test and store cards depend on the remote client being usable on a tablet.
-
-- [ ] Pi extension UI requests are dropped <!-- labels: bug -->
-      extension_ui_request (select/confirm/input/editor) is ignored, so extension wizards hang in the agent tab. Map them to an interactive card and answer through the gateway. Only matters if native agents stay in 2.0.
-
-- [ ] .env.cockpit on remote workspaces <!-- labels: feature -->
-      The file lives on the host; cockpit-server must read it at PTY spawn so remote terminals get the same variables as local ones.
-
-- [ ] Redact injected secrets in terminal output <!-- labels: security -->
-      Cockpit knows the values it injected from .env.cockpit; replace them with *** in the scrollback and in hook output before an agent transcript sees them.
 
 - [ ] Explicit approval for .env.cockpit in a freshly cloned repo <!-- labels: security -->
       Like `direnv allow`: a repo you just cloned should not inject environment into your shell until you approve it once per workspace.
 
+
+- [ ] Drag-and-drop a file into the terminal steals the tab focus <!-- labels: bug -->
+      Dropping a file pastes the absolute path correctly, but the terminal tab loses keyboard focus and the user has to click it again before typing.
+
+
 - [ ] Green test suite on main <!-- labels: hygiene -->
       Four tests already fail on main: two in window_menu_bar_test.dart and two in cockpit_terminal_input_test.dart. 2.0 should ship with the suite passing.
+
+
+- [ ] Consolidated 2.0.0 release notes <!-- labels: docs -->
+      Every 1.x since 1.28.0 is a 2.0 beta. Write the single 2.0.0 section from the 1.x changelog entries; it is what Sparkle and the download page will show.
+
 
 - [ ] Analyzer noise in tool/ and packages/ <!-- labels: hygiene -->
       About 260 warnings from newer SDK lints, none in lib/. Clean them or scope the analyzer so real issues are visible again.
 
-- [ ] Decide: do native agents (pi --mode rpc) stay in 2.0? <!-- labels: decision -->
+
+- [ ] Redact injected secrets in terminal output <!-- labels: security -->
+      Cockpit knows the values it injected from .env.cockpit; replace them with *** in the scrollback and in hook output before an agent transcript sees them.
+
+
+- [ ] Mermaid diagrams <!-- labels: feature -->
+      Render ```mermaid blocks in markdown and .html views so the agent can draw flowcharts and sequence diagrams.
+
+
+- [ ] .env.cockpit on remote workspaces <!-- labels: feature -->
+      The file lives on the host; cockpit-server must read it at PTY spawn so remote terminals get the same variables as local ones.
+
+
+- [ ] Windows code signing via SignPath OSS <!-- labels: cd -->
+      Application submitted on signpath.org (MIT license added 2026-07-30). Once approved, integrate signing into the windows job of cockpit-release.yml. Unsigned builds keep triggering SmartScreen.
+
+
+- [ ] Document the new features on the Cockpit page of the site <!-- labels: docs -->
+      `../site`: .env.cockpit, Restart tab, Neovim, workspace CLI, remote hosts, Gallery documents, Database panel and everything else that shipped since the page was last updated.
+
+
+- [ ] Validate self-update on Windows end to end <!-- labels: cd -->
+      WinSparkle is wired but was never verified on a real machine: appcast, signature check, silent restart.
+
+
+- [ ] Excalidraw <!-- labels: feature -->
+      Embed Excalidraw as a whiteboard document (.excalidraw) for sketches and architecture drawings.
+
+
+- [ ] In-app Help section (user manual) <!-- labels: docs, feature -->
+      A Help entry inside Cockpit the user can read like a manual: shortcuts, panels, Gallery documents, CLI verbs, remote workspaces.
+
+
+- [ ] Pi extension UI requests are dropped <!-- labels: bug -->
+      extension_ui_request (select/confirm/input/editor) is ignored, so extension wizards hang in the agent tab. Map them to an interactive card and answer through the gateway. Only matters if native agents stay in 2.0.
+
+
+- [ ] Mind map <!-- labels: feature -->
+      A mind-map document the agent writes and the user reads and edits.
+
+
+- [ ] "Open with Cockpit" from the OS file manager <!-- labels: feature -->
+      Document-type association (Info.plist on macOS, extension registration on Windows/Linux) plus the open-file handler: opens a lightweight file window without showing the full workspace.
+
+
+- [ ] Android CD pipeline <!-- labels: cd, mobile -->
+      GitHub Actions job that builds and signs the Android app on tag, like the macOS/Windows/Linux jobs in cockpit-release.yml.
+
+
+- [ ] Test on a physical Android device <!-- labels: mobile -->
+
+
+- [ ] Test on iOS (iPad) <!-- labels: mobile -->
+
+
+- [ ] Multi-window: detach a file tab into its own window <!-- labels: feature -->
+      Viewer, .kanban, .html, .http, .dbq and diff tabs carry only a path and a mode, so a second window can rebuild them. Each Flutter window is a separate engine/isolate: state crosses only as messages. This slice gives most of the two-monitor value.
+
+
+- [ ] Publish on Google Play <!-- labels: cd, mobile -->
+
+
+- [ ] Publish on the App Store <!-- labels: cd, mobile -->
+
+
+- [ ] Remote workspace redesign (plan 58) <!-- labels: feature -->
+      Remote workspace = a host folder with worktrees, git and file tree like local; pick the folder when connecting; the "+" becomes a Local/Remote menu instead of a fixed button.
+
+
+- [ ] Mobile client usable (plan 59, waves 1+) <!-- labels: mobile -->
+      Wave 0 done (iOS/Android projects, landscape). The Android/iOS test and store cards depend on the remote client being usable on a tablet.
+
+
+- [ ] Multi-window: detach a terminal tab <!-- labels: feature -->
+      Needs the PTY hosted outside the window process. The sidecar terminal gateway (remote mode) already does that: make it the default local path, then detaching becomes attaching the same session id in another window. Bonus: terminals survive a UI crash. Decide whether this lands in 2.0 or after.
+- [ ] Decide: do native agents (pi --mode rpc) stay in 2.0? <!-- id: k1 labels: decision -->
       The enableAgent flag ships off and the terminal is the main path. If they stay, .env.cockpit and Restart must cover the agent tab too, and the UI-request bug above becomes a blocker.
 
-- [ ] Decide: macOS sandbox stays off? <!-- labels: decision -->
-      Sandbox is off without a recorded decision. Confirm and document it, or plan the entitlements work.
+
 
 ## Doing
 
