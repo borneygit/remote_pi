@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:cockpit/app/cockpit/data/remote/dartssh_host_connection.dart';
 import 'package:cockpit/app/cockpit/data/remote/mobile_ssh_key_store.dart';
+import 'package:cockpit/app/cockpit/data/remote/reconnect_scheduler.dart';
 import 'package:cockpit/app/cockpit/data/remote/ssh_worker_connection.dart';
 import 'package:cockpit/app/cockpit/data/remote/host_shell/host_shell.dart';
 import 'package:cockpit/app/cockpit/data/remote/host_shell/posix_host_shell.dart';
@@ -97,9 +98,20 @@ class RemoteHostConnector {
     this.passwordResolver,
     this.hostKeyPrompt,
     this.knownHosts = const SshKnownHosts(),
-  });
+    bool Function()? isFocused,
+  }) {
+    _retry = ReconnectScheduler(
+      onAttempt: _attemptReconnect,
+      isFocused: isFocused ?? _alwaysFocused,
+    );
+  }
+
+  static bool _alwaysFocused() => true;
 
   final RemoteHost host;
+
+  /// Política de retry (backoff + gate de foco). Ver [ReconnectScheduler].
+  late final ReconnectScheduler _retry;
 
   /// Resolve o cockpit-server embarcado usado como fonte do bootstrap, para o
   /// sistema e arquitetura pedidos (`darwin`/`linux`, `arm64`/`x64`). Quem
@@ -176,7 +188,7 @@ class RemoteHostConnector {
           // pra trocar o serviço e re-anexar; quando ele só saía pelo caminho
           // do retry, uma reconexão disparada por qualquer outra ação deixava as
           // abas presas ao serviço morto (teclado mudo).
-          _retryStep = 0;
+          _retry.reset();
           if (!_disposed) _reconnected.add(service);
           return service;
         })
@@ -669,21 +681,9 @@ class RemoteHostConnector {
 
   // --- Reconexão automática -------------------------------------------------
   //
-  // Backoff crescente que NUNCA desiste (decisão do usuário): 1s, 2s, 4s, 8s,
-  // 15s e daí 30s fixo. O teto no intervalo (e não no número de tentativas) é
-  // o que mantém "insiste pra sempre" sem martelar a rede — num iPad, um socket
-  // a cada 30s é desprezível perto de tentar a cada segundo.
-  static const List<Duration> _backoff = <Duration>[
-    Duration(seconds: 1),
-    Duration(seconds: 2),
-    Duration(seconds: 4),
-    Duration(seconds: 8),
-    Duration(seconds: 15),
-    Duration(seconds: 30),
-  ];
-
-  Timer? _retryTimer;
-  int _retryStep = 0;
+  // Backoff que NUNCA desiste (decisão do usuário) + gate de foco: o tique só
+  // tenta se o workspace deste host é o selecionado; senão a tentativa fica
+  // adiada até [resumeRetry]. Política e intervalos em [ReconnectScheduler].
   bool _disposed = false;
 
   /// Emite quando a conexão é REFEITA — os gateways de terminal usam pra
@@ -700,14 +700,19 @@ class RemoteHostConnector {
   }
 
   void _scheduleRetry() {
-    if (_disposed || _retryTimer != null) return;
-    final delay = _backoff[_retryStep.clamp(0, _backoff.length - 1)];
-    if (_retryStep < _backoff.length - 1) _retryStep++;
-    _retryTimer = Timer(delay, () {
-      _retryTimer = null;
-      _attemptReconnect();
-    });
+    if (_disposed) return;
+    _retry.schedule();
   }
+
+  /// O workspace deste host voltou a ser o selecionado: se uma tentativa de
+  /// reconexão ficou adiada por falta de foco, dispara agora.
+  void resumeRetry() {
+    if (_disposed) return;
+    _retry.resume();
+  }
+
+  /// Há tentativa de reconexão esperando o foco voltar (pro badge da UI).
+  bool get isRetryDeferred => _retry.isDeferred;
 
   Future<void> _attemptReconnect() async {
     if (_disposed) return;
@@ -737,9 +742,7 @@ class RemoteHostConnector {
   /// já pendurada: da UI, parecia que o botão não fazia nada.
   Future<void> reconnectNow() async {
     if (_disposed) return;
-    _retryTimer?.cancel();
-    _retryTimer = null;
-    _retryStep = 0;
+    _retry.reset();
     // Feedback imediato: o abort abaixo pode levar um instante (fechar socket,
     // esperar a tentativa pendurada morrer) e o clique não pode parecer inerte.
     _setPhase(RemoteHostPhase.openingTunnel);
@@ -795,8 +798,7 @@ class RemoteHostConnector {
 
   Future<void> dispose() async {
     _disposed = true;
-    _retryTimer?.cancel();
-    _retryTimer = null;
+    _retry.dispose();
     await _reconnected.close();
     await _turnSub?.cancel();
     await _turnStatus.close();

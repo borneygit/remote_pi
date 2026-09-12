@@ -194,6 +194,9 @@ class CockpitViewModel extends ChangeNotifier {
       ..selectProject = selectProject
       ..forkOrigin = ((forkId) => _forkOrigin[forkId])
       ..applyForks = _applyRemoteForks;
+    // Retry automático só pro host do workspace selecionado: host fora de
+    // foco não fica spawnando ssh a cada 30s enquanto ninguém olha.
+    _remoteHosts.isHostFocused = (hostId) => remote.activeHost?.id == hostId;
     files
       ..openFile = openFile
       ..retargetSessions = _retargetSessions
@@ -4457,6 +4460,7 @@ class CockpitViewModel extends ChangeNotifier {
     }
     _selectedProjectId = id;
     _sessionSelectionByRealm[realmCtrl.activeId] = id;
+    _remoteHosts.focusChanged(); // host remoto em foco retoma retry adiado
     _requestPaneKeyboard();
     // Persiste o workspace (raiz) pra pré-selecionar na próxima abertura —
     // por realm: cada realm lembra a própria última seleção.
