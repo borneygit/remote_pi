@@ -8,19 +8,12 @@ labels: {bug: red, cd: orange, mobile: blue, docs: green, feature: purple, secur
 
 
 
-- [ ] Kanban: card dependencies (blocked by) <!-- labels: feature -->
-      New `blockedBy: k1, k2` key in the card comment, next to id/labels; references by id (rename-safe), one direction stored, "blocks N" derived on read. Cards get an id when linked. UI: lock chip "blocked by N" that disappears when all blockers reach the last column, "blocks N" on the blocker, a "Blocked by" row in the detail panel with a title picker, and blocked/ready toggles in the filter popover. Moving a blocked card to the last column warns, never forbids. Unknown ids render as grey "unknown"; cycles allowed; dangling refs cleaned when the card is rewritten.
-
-
 - [ ] Document the new features on the Cockpit page of the site <!-- labels: docs -->
       `../site`: .env.cockpit, Restart tab, Neovim, workspace CLI, remote hosts, Gallery documents, Database panel and everything else that shipped since the page was last updated.
 
 
 - [ ] Windows code signing via SignPath OSS <!-- id: k3 labels: cd -->
       Application submitted on signpath.org (MIT license added 2026-07-30). Once approved, integrate signing into the windows job of cockpit-release.yml. Unsigned builds keep triggering SmartScreen.
-
-- [ ] Validate self-update on Windows end to end <!-- labels: cd -->
-      WinSparkle is wired but was never verified on a real machine: appcast, signature check, silent restart.
 
 
 - [ ] Excalidraw <!-- labels: feature -->
@@ -106,4 +99,7 @@ labels: {bug: red, cd: orange, mobile: blue, docs: green, feature: purple, secur
 
 - [x] .env.cockpit on remote workspaces <!-- labels: feature -->
       Done 2026-09-12: the remote terminal gateway reads <root>/.env.cockpit (and each multi-root root) on the host via fs.read right before spawning, merges it under the Cockpit env, and the tab's secret redaction is updated once the values arrive. No cockpit-server change and no protocol change. Blocked keys apply the same way. Not covered: the git-tracked notice (needs a remote `git ls-files`), left out on purpose.
+
+- [x] Kanban: card dependencies (blocked by) <!-- labels: feature -->
+      Done 2026-09-12: `blockedBy: k1, k2` in the card comment (by id, either order with labels). Card footer replaced the note preview: `#id`, comment icon with count, and "blocked by N" (pending blockers only, tooltip lists them) or "blocks N". Detail panel has a Blocked by row with chips (struck through when done, unknown ids marked) and a searchable card picker. Filter popover gained Blocked/Ready toggles. Blockers get an id when linked; a card never blocks itself. Not done: the warning when moving a blocked card to the last column.
 

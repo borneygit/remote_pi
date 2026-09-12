@@ -78,6 +78,7 @@ class KanbanCard {
     required this.endLine,
     required this.id,
     this.comments = const [],
+    this.blockedBy = const [],
     int? notesEndLine,
     this.recognized = true,
   }) : notesEndLine = notesEndLine ?? endLine;
@@ -85,6 +86,11 @@ class KanbanCard {
   final String title;
   final bool checked;
   final List<String> labels;
+
+  /// Ids dos cards que bloqueiam este (`blockedBy: k1, k2` no comentário).
+  /// Só esta direção é gravada; "bloqueia N" é derivado na leitura
+  /// ([KanbanDocument.blocksCount]). Referência por id: renomear não quebra.
+  final List<String> blockedBy;
 
   /// Corpo em markdown: as linhas de continuação ATÉ o primeiro comentário
   /// (sem a indentação comum).
@@ -169,6 +175,58 @@ class KanbanDocument {
 
   String get content => lines.join(eol);
 
+  /// Card por id (`null` se nenhum card tem esse id).
+  KanbanCard? cardById(String id) {
+    for (final column in columns) {
+      for (final card in column.cards) {
+        if (card.id == id) return card;
+      }
+    }
+    return null;
+  }
+
+  /// Índice da coluna onde [card] está (-1 se não está no documento).
+  int columnOf(KanbanCard card) {
+    for (var i = 0; i < columns.length; i++) {
+      if (columns[i].cards.any((c) => c.startLine == card.startLine)) return i;
+    }
+    return -1;
+  }
+
+  /// Cards que bloqueiam [card] e ainda existem (ids desconhecidos ficam de
+  /// fora; ver [unknownBlockers]).
+  List<KanbanCard> blockersOf(KanbanCard card) => [
+    for (final id in card.blockedBy) ?cardById(id),
+  ];
+
+  /// Ids em `blockedBy` que não apontam pra card nenhum (apagado, ou erro).
+  List<String> unknownBlockers(KanbanCard card) => [
+    for (final id in card.blockedBy)
+      if (cardById(id) == null) id,
+  ];
+
+  /// Bloqueado = ao menos um bloqueador que ainda não chegou à última coluna.
+  /// Derivado, nunca gravado: quando o bloqueador termina, o bloqueio some
+  /// sozinho. Id desconhecido não bloqueia (não há o que esperar).
+  bool isBlocked(KanbanCard card) {
+    if (columns.isEmpty) return false;
+    final last = columns.length - 1;
+    return blockersOf(card).any((b) => columnOf(b) != last);
+  }
+
+  /// Quantos cards ainda dependem de [card] (o inverso de `blockedBy`).
+  int blocksCount(KanbanCard card) {
+    final id = card.id;
+    if (id == null) return 0;
+    var n = 0;
+    for (final column in columns) {
+      for (final c in column.cards) {
+        if (c.blockedBy.contains(id)) n++;
+      }
+    }
+    return n;
+  }
+
   /// Todos os marcadores em uso, na ordem em que aparecem no frontmatter e
   /// depois os que só existem nos cards.
   List<String> get allLabels {
@@ -199,7 +257,14 @@ class KanbanDocument {
   static final _cardLine = RegExp(r'^[ \t]{0,1}-[ \t]+\[([ xX])\][ \t]?(.*)$');
   static final _meta = RegExp(r'<!--\s*(.*?)\s*-->\s*$');
   static final _idKey = RegExp(r'\bid:\s*([A-Za-z0-9_-]+)');
-  static final _labelsKey = RegExp(r'\blabels:\s*([^>]*?)(?:\s*-->|$)');
+  // `labels:` para antes de ` blockedBy:` (e vice-versa): as duas chaves
+  // vivem no mesmo comentário, em qualquer ordem.
+  static final _labelsKey = RegExp(
+    r'\blabels:\s*(.*?)(?:\s+blockedBy:|\s*-->|$)',
+  );
+  static final _blockedByKey = RegExp(
+    r'\bblockedBy:\s*(.*?)(?:\s+labels:|\s*-->|$)',
+  );
   static final _commentMark = RegExp(r'^\s*<!--\s*comment:\s*(.*?)\s*-->\s*$');
 
   static KanbanDocument parse(String content) {
@@ -396,6 +461,7 @@ class KanbanDocument {
           title: title,
           checked: match.group(1)!.toLowerCase() == 'x',
           labels: _parseLabels(metaBody),
+          blockedBy: _parseList(_blockedByKey, metaBody),
           notes: _dedent(lines.sublist(start + 1, notesEnd)),
           comments: comments,
           startLine: start,
@@ -420,8 +486,11 @@ class KanbanDocument {
     return null;
   }
 
-  static List<String> _parseLabels(String metaBody) {
-    final match = _labelsKey.firstMatch(metaBody);
+  static List<String> _parseLabels(String metaBody) =>
+      _parseList(_labelsKey, metaBody);
+
+  static List<String> _parseList(RegExp key, String metaBody) {
+    final match = key.firstMatch(metaBody);
     if (match == null) return const [];
     return match
         .group(1)!

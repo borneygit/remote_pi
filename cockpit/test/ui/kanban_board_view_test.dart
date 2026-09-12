@@ -583,4 +583,49 @@ void main() {
     expect(find.text('Card pronto'), findsNothing);
     expect(find.byIcon(Icons.filter_alt), findsOneWidget);
   });
+
+  testWidgets('rodapé mostra número, comentários e bloqueio; filtro Blocked', (
+    tester,
+  ) async {
+    session.view = const FileViewText('''
+## Backlog
+
+- [ ] Publicar <!-- id: k3 blockedBy: k1, k2 -->
+- [ ] Testar <!-- id: k2 -->
+      Nota que não aparece no card.
+
+      <!-- comment: 2026-09-12T10:00 -->
+      Um comentário.
+
+## Done
+
+- [x] Pipeline <!-- id: k1 -->
+''');
+    await pump(tester);
+
+    // Número do card no rodapé; a nota fica só no painel.
+    expect(find.text('#k3'), findsOneWidget);
+    expect(find.textContaining('Nota que não aparece'), findsNothing);
+    // Comentários: ícone + contagem.
+    expect(find.byIcon(Icons.chat_bubble_outline), findsOneWidget);
+    expect(find.text('1'), findsWidgets);
+    // k3 está bloqueado por k2 (pendente); k1 já terminou e não conta.
+    expect(find.text('blocked by 1'), findsOneWidget);
+    expect(find.byIcon(Icons.lock_outline), findsOneWidget);
+    // k2 segura k3.
+    expect(find.text('blocks 1'), findsOneWidget);
+
+    // Filtro "Blocked" deixa só o k3.
+    await tester.tap(find.byIcon(Icons.filter_alt_outlined));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('kanban-filter-blocked')));
+    await tester.pumpAndSettle();
+    expect(find.text('Publicar'), findsOneWidget);
+    expect(find.text('Testar'), findsNothing);
+    // "Ready" inverte.
+    await tester.tap(find.byKey(const ValueKey('kanban-filter-ready')));
+    await tester.pumpAndSettle();
+    expect(find.text('Publicar'), findsNothing);
+    expect(find.text('Testar'), findsOneWidget);
+  });
 }

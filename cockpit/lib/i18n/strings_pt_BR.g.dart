@@ -869,6 +869,15 @@ class _Translations$cockpit$kanbanView$pt_BR extends Translations$cockpit$kanban
 	@override String get filterTitlePlaceholder => 'Buscar por título';
 	@override String get filterLabels => 'Marcadores';
 	@override String get filterClear => 'Limpar';
+	@override String get filterDependencies => 'Dependências';
+	@override String get filterBlocked => 'Bloqueado';
+	@override String get filterReady => 'Pronto';
+	@override String get blockedBy => 'Bloqueado por';
+	@override String get addBlocker => 'Adicionar card bloqueador';
+	@override String get searchCards => 'Buscar cards';
+	@override String get unknownCard => 'desconhecido';
+	@override String blockedByN({required Object n}) => 'bloqueado por ${n}';
+	@override String blocksN({required Object n}) => 'bloqueia ${n}';
 	@override String get boardView => 'Quadro';
 	@override String get listView => 'Lista';
 	@override String get refresh => 'Atualizar do disco';
@@ -2475,6 +2484,15 @@ extension on TranslationsPtBr {
 			'cockpit.kanbanView.filterTitlePlaceholder' => 'Buscar por título',
 			'cockpit.kanbanView.filterLabels' => 'Marcadores',
 			'cockpit.kanbanView.filterClear' => 'Limpar',
+			'cockpit.kanbanView.filterDependencies' => 'Dependências',
+			'cockpit.kanbanView.filterBlocked' => 'Bloqueado',
+			'cockpit.kanbanView.filterReady' => 'Pronto',
+			'cockpit.kanbanView.blockedBy' => 'Bloqueado por',
+			'cockpit.kanbanView.addBlocker' => 'Adicionar card bloqueador',
+			'cockpit.kanbanView.searchCards' => 'Buscar cards',
+			'cockpit.kanbanView.unknownCard' => 'desconhecido',
+			'cockpit.kanbanView.blockedByN' => ({required Object n}) => 'bloqueado por ${n}',
+			'cockpit.kanbanView.blocksN' => ({required Object n}) => 'bloqueia ${n}',
 			'cockpit.kanbanView.boardView' => 'Quadro',
 			'cockpit.kanbanView.listView' => 'Lista',
 			'cockpit.kanbanView.refresh' => 'Atualizar do disco',
@@ -2536,6 +2554,8 @@ extension on TranslationsPtBr {
 			'cockpit.dbMongoView.insertDocument' => 'Inserir documento',
 			'cockpit.dbMongoView.noDocuments' => 'Nenhum documento nesta coleção.',
 			'cockpit.dbMongoView.noDocumentsMatch' => 'Nenhum documento corresponde a este filtro.',
+			_ => null,
+		} ?? switch (path) {
 			'cockpit.dbMongoView.loadMore' => 'Carregar mais',
 			'cockpit.dbMongoView.edit' => 'Editar',
 			'cockpit.dbMongoView.insert' => 'Inserir',
@@ -2545,8 +2565,6 @@ extension on TranslationsPtBr {
 			'cockpit.dbConnectionDialog.name' => 'Nome',
 			'cockpit.dbConnectionDialog.password' => 'Senha',
 			'cockpit.dbConnectionDialog.savePassword' => 'Salvar senha',
-			_ => null,
-		} ?? switch (path) {
 			'cockpit.dbConnectionDialog.allowWrites' => 'Permitir escrita (agentes)',
 			'cockpit.dbConnectionDialog.allowWritesHint' => 'desligado = agentes só leem via CLI',
 			'cockpit.dbConnectionDialog.visibleToAgents' => 'Visível para agentes',
@@ -3050,6 +3068,8 @@ extension on TranslationsPtBr {
 			'settings.page.automations.recommendedSuffix' => 'Recomendado',
 			'settings.remoteHosts.title' => 'Hosts remotos',
 			'settings.remoteHosts.description' => 'Máquinas que você acessa por SSH. Adicionar um host aqui é o mesmo que adicionar pelo menu "+" do workspace.',
+			_ => null,
+		} ?? switch (path) {
 			'settings.remoteHosts.empty' => 'Nenhum host remoto ainda.',
 			'settings.remoteHosts.add' => 'Adicionar host',
 			'settings.remoteHosts.edit' => 'Editar',
@@ -3059,8 +3079,6 @@ extension on TranslationsPtBr {
 			'settings.remoteHosts.removeMessage' => ({required Object name}) => 'Remover "${name}" e todos os workspaces dele? Nada é apagado no host.',
 			'settings.remoteHosts.workspacesCount' => ({required Object count}) => '${count} workspace(s)',
 			'settings.remoteHosts.deviceKeyTitle' => 'Chave deste dispositivo',
-			_ => null,
-		} ?? switch (path) {
 			'settings.remoteHosts.deviceKeyDesc' => 'Adicione esta chave pública ao ~/.ssh/authorized_keys do host para este dispositivo poder conectar.',
 			'settings.remoteHosts.deviceKeyCopy' => 'Copiar chave pública',
 			'settings.remoteHosts.deviceKeyCopied' => 'Chave pública copiada',

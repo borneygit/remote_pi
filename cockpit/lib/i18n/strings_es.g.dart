@@ -869,6 +869,15 @@ class _Translations$cockpit$kanbanView$es extends Translations$cockpit$kanbanVie
 	@override String get filterTitlePlaceholder => 'Buscar por título';
 	@override String get filterLabels => 'Etiquetas';
 	@override String get filterClear => 'Limpiar';
+	@override String get filterDependencies => 'Dependencias';
+	@override String get filterBlocked => 'Bloqueado';
+	@override String get filterReady => 'Listo';
+	@override String get blockedBy => 'Bloqueado por';
+	@override String get addBlocker => 'Agregar tarjeta bloqueante';
+	@override String get searchCards => 'Buscar tarjetas';
+	@override String get unknownCard => 'desconocida';
+	@override String blockedByN({required Object n}) => 'bloqueado por ${n}';
+	@override String blocksN({required Object n}) => 'bloquea ${n}';
 	@override String get boardView => 'Tablero';
 	@override String get listView => 'Lista';
 	@override String get refresh => 'Actualizar desde el disco';
@@ -2475,6 +2484,15 @@ extension on TranslationsEs {
 			'cockpit.kanbanView.filterTitlePlaceholder' => 'Buscar por título',
 			'cockpit.kanbanView.filterLabels' => 'Etiquetas',
 			'cockpit.kanbanView.filterClear' => 'Limpiar',
+			'cockpit.kanbanView.filterDependencies' => 'Dependencias',
+			'cockpit.kanbanView.filterBlocked' => 'Bloqueado',
+			'cockpit.kanbanView.filterReady' => 'Listo',
+			'cockpit.kanbanView.blockedBy' => 'Bloqueado por',
+			'cockpit.kanbanView.addBlocker' => 'Agregar tarjeta bloqueante',
+			'cockpit.kanbanView.searchCards' => 'Buscar tarjetas',
+			'cockpit.kanbanView.unknownCard' => 'desconocida',
+			'cockpit.kanbanView.blockedByN' => ({required Object n}) => 'bloqueado por ${n}',
+			'cockpit.kanbanView.blocksN' => ({required Object n}) => 'bloquea ${n}',
 			'cockpit.kanbanView.boardView' => 'Tablero',
 			'cockpit.kanbanView.listView' => 'Lista',
 			'cockpit.kanbanView.refresh' => 'Actualizar desde el disco',
@@ -2536,6 +2554,8 @@ extension on TranslationsEs {
 			'cockpit.dbMongoView.insertDocument' => 'Insertar documento',
 			'cockpit.dbMongoView.noDocuments' => 'No hay documentos en esta colección.',
 			'cockpit.dbMongoView.noDocumentsMatch' => 'Ningún documento coincide con este filtro.',
+			_ => null,
+		} ?? switch (path) {
 			'cockpit.dbMongoView.loadMore' => 'Cargar más',
 			'cockpit.dbMongoView.edit' => 'Editar',
 			'cockpit.dbMongoView.insert' => 'Insertar',
@@ -2545,8 +2565,6 @@ extension on TranslationsEs {
 			'cockpit.dbConnectionDialog.name' => 'Nombre',
 			'cockpit.dbConnectionDialog.password' => 'Contraseña',
 			'cockpit.dbConnectionDialog.savePassword' => 'Guardar contraseña',
-			_ => null,
-		} ?? switch (path) {
 			'cockpit.dbConnectionDialog.allowWrites' => 'Permitir escritura (agentes)',
 			'cockpit.dbConnectionDialog.allowWritesHint' => 'desactivado = los agentes solo leen vía CLI',
 			'cockpit.dbConnectionDialog.visibleToAgents' => 'Visible para agentes',
@@ -3050,6 +3068,8 @@ extension on TranslationsEs {
 			'settings.page.automations.recommendedSuffix' => 'Recomendado',
 			'settings.remoteHosts.title' => 'Hosts remotos',
 			'settings.remoteHosts.description' => 'Máquinas a las que accedes por SSH. Añadir un host aquí es lo mismo que hacerlo desde el menú "+" del workspace.',
+			_ => null,
+		} ?? switch (path) {
 			'settings.remoteHosts.empty' => 'Aún no hay hosts remotos.',
 			'settings.remoteHosts.add' => 'Añadir host',
 			'settings.remoteHosts.edit' => 'Editar',
@@ -3059,8 +3079,6 @@ extension on TranslationsEs {
 			'settings.remoteHosts.removeMessage' => ({required Object name}) => '¿Eliminar "${name}" y todos sus workspaces? No se borra nada en el host.',
 			'settings.remoteHosts.workspacesCount' => ({required Object count}) => '${count} workspace(s)',
 			'settings.remoteHosts.deviceKeyTitle' => 'Clave de este dispositivo',
-			_ => null,
-		} ?? switch (path) {
 			'settings.remoteHosts.deviceKeyDesc' => 'Añade esta clave pública a ~/.ssh/authorized_keys del host para que este dispositivo pueda conectarse.',
 			'settings.remoteHosts.deviceKeyCopy' => 'Copiar clave pública',
 			'settings.remoteHosts.deviceKeyCopied' => 'Clave pública copiada',

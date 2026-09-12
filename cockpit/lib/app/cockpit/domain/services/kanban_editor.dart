@@ -146,6 +146,42 @@ abstract final class KanbanEditor {
     return lines.join(doc.eol);
   }
 
+  /// Define quem bloqueia [card]: [blockers] são os cards escolhidos (todos
+  /// ganham id se ainda não têm — a referência é por id). Lista vazia limpa.
+  static String setBlockedBy(
+    KanbanDocument doc,
+    KanbanCard card,
+    List<KanbanCard> blockers,
+  ) {
+    if (!card.recognized) return doc.content;
+    final lines = [...doc.lines];
+    final used = doc.columns
+        .expand((c) => c.cards)
+        .map((c) => c.id)
+        .whereType<String>()
+        .toSet();
+    String ensureId(KanbanCard c) {
+      if (c.id case final id?) return id;
+      final id = _nextId(used);
+      lines[c.startLine] = _headerLine(c, checked: c.checked, id: id);
+      return id;
+    }
+
+    final ids = <String>[];
+    for (final b in blockers) {
+      if (b.startLine == card.startLine) continue; // não bloqueia a si mesmo
+      final id = ensureId(b);
+      if (!ids.contains(id)) ids.add(id);
+    }
+    lines[card.startLine] = _headerLine(
+      card,
+      checked: card.checked,
+      id: ensureId(card),
+      blockedBy: ids,
+    );
+    return lines.join(doc.eol);
+  }
+
   // ----------------------------------------------------------- colunas -----
 
   static String addColumn(KanbanDocument doc, String name) {
@@ -347,11 +383,16 @@ abstract final class KanbanEditor {
     required String id,
     String? title,
     List<String>? labels,
+    List<String>? blockedBy,
   }) {
     final effectiveLabels = labels ?? card.labels;
+    final effectiveBlockedBy = blockedBy ?? card.blockedBy;
     final meta = StringBuffer('<!-- id: $id');
     if (effectiveLabels.isNotEmpty) {
       meta.write(' labels: ${effectiveLabels.join(', ')}');
+    }
+    if (effectiveBlockedBy.isNotEmpty) {
+      meta.write(' blockedBy: ${effectiveBlockedBy.join(', ')}');
     }
     meta.write(' -->');
     return '- [${checked ? 'x' : ' '}] ${title ?? card.title} $meta';
@@ -378,12 +419,17 @@ abstract final class KanbanEditor {
 
   /// Id curto e único no documento. Nasce na primeira mutação pela UI — o
   /// arquivo escrito à mão não precisa de nenhum.
-  static String _newId(KanbanDocument doc) {
-    final used = doc.columns
+  static String _newId(KanbanDocument doc) => _nextId(
+    doc.columns
         .expand((c) => c.cards)
         .map((c) => c.id)
         .whereType<String>()
-        .toSet();
+        .toSet(),
+  );
+
+  /// Primeiro `kN` livre em [used]; registra o id escolhido no conjunto, pra
+  /// várias atribuições na mesma edição não colidirem.
+  static String _nextId(Set<String> used) {
     for (var n = 1; ; n++) {
       final id = 'k$n';
       if (used.add(id)) return id;

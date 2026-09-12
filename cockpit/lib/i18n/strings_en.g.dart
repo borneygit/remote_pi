@@ -1737,6 +1737,33 @@ class Translations$cockpit$kanbanView$en {
 	/// en: 'Clear'
 	String get filterClear => 'Clear';
 
+	/// en: 'Dependencies'
+	String get filterDependencies => 'Dependencies';
+
+	/// en: 'Blocked'
+	String get filterBlocked => 'Blocked';
+
+	/// en: 'Ready'
+	String get filterReady => 'Ready';
+
+	/// en: 'Blocked by'
+	String get blockedBy => 'Blocked by';
+
+	/// en: 'Add a blocking card'
+	String get addBlocker => 'Add a blocking card';
+
+	/// en: 'Search cards'
+	String get searchCards => 'Search cards';
+
+	/// en: 'unknown'
+	String get unknownCard => 'unknown';
+
+	/// en: 'blocked by ${n}'
+	String blockedByN({required Object n}) => 'blocked by ${n}';
+
+	/// en: 'blocks ${n}'
+	String blocksN({required Object n}) => 'blocks ${n}';
+
 	/// en: 'Board'
 	String get boardView => 'Board';
 
@@ -4642,6 +4669,15 @@ extension on Translations {
 			'cockpit.kanbanView.filterTitlePlaceholder' => 'Search titles',
 			'cockpit.kanbanView.filterLabels' => 'Labels',
 			'cockpit.kanbanView.filterClear' => 'Clear',
+			'cockpit.kanbanView.filterDependencies' => 'Dependencies',
+			'cockpit.kanbanView.filterBlocked' => 'Blocked',
+			'cockpit.kanbanView.filterReady' => 'Ready',
+			'cockpit.kanbanView.blockedBy' => 'Blocked by',
+			'cockpit.kanbanView.addBlocker' => 'Add a blocking card',
+			'cockpit.kanbanView.searchCards' => 'Search cards',
+			'cockpit.kanbanView.unknownCard' => 'unknown',
+			'cockpit.kanbanView.blockedByN' => ({required Object n}) => 'blocked by ${n}',
+			'cockpit.kanbanView.blocksN' => ({required Object n}) => 'blocks ${n}',
 			'cockpit.kanbanView.boardView' => 'Board',
 			'cockpit.kanbanView.listView' => 'List',
 			'cockpit.kanbanView.refresh' => 'Refresh from disk',
@@ -4703,6 +4739,8 @@ extension on Translations {
 			'cockpit.dbMongoView.insertDocument' => 'Insert document',
 			'cockpit.dbMongoView.noDocuments' => 'No documents in this collection.',
 			'cockpit.dbMongoView.noDocumentsMatch' => 'No documents match this filter.',
+			_ => null,
+		} ?? switch (path) {
 			'cockpit.dbMongoView.loadMore' => 'Load more',
 			'cockpit.dbMongoView.edit' => 'Edit',
 			'cockpit.dbMongoView.insert' => 'Insert',
@@ -4712,8 +4750,6 @@ extension on Translations {
 			'cockpit.dbConnectionDialog.name' => 'Name',
 			'cockpit.dbConnectionDialog.password' => 'Password',
 			'cockpit.dbConnectionDialog.savePassword' => 'Save Password',
-			_ => null,
-		} ?? switch (path) {
 			'cockpit.dbConnectionDialog.allowWrites' => 'Allow writes (agents)',
 			'cockpit.dbConnectionDialog.allowWritesHint' => 'off = agents can only read via CLI',
 			'cockpit.dbConnectionDialog.visibleToAgents' => 'Visible to agents',
@@ -5217,6 +5253,8 @@ extension on Translations {
 			'settings.page.automations.recommendedSuffix' => 'Recommended',
 			'settings.remoteHosts.title' => 'Remote hosts',
 			'settings.remoteHosts.description' => 'Machines you reach over SSH. Adding a host here is the same as adding one from the workspace "+" menu.',
+			_ => null,
+		} ?? switch (path) {
 			'settings.remoteHosts.empty' => 'No remote hosts yet.',
 			'settings.remoteHosts.add' => 'Add host',
 			'settings.remoteHosts.edit' => 'Edit',
@@ -5226,8 +5264,6 @@ extension on Translations {
 			'settings.remoteHosts.removeMessage' => ({required Object name}) => 'Remove "${name}" and all its workspaces? Nothing is deleted on the host itself.',
 			'settings.remoteHosts.workspacesCount' => ({required Object count}) => '${count} workspace(s)',
 			'settings.remoteHosts.deviceKeyTitle' => 'This device\'s key',
-			_ => null,
-		} ?? switch (path) {
 			'settings.remoteHosts.deviceKeyDesc' => 'Add this public key to ~/.ssh/authorized_keys on the host so this device can connect.',
 			'settings.remoteHosts.deviceKeyCopy' => 'Copy public key',
 			'settings.remoteHosts.deviceKeyCopied' => 'Public key copied',

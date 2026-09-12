@@ -621,4 +621,68 @@ um parágrafo solto
       expect(doc.columns.last.cards.single.checked, isTrue);
     });
   });
+
+  group('blockedBy', () {
+    const board = '''
+## Backlog
+
+- [ ] Publish <!-- id: k3 labels: cd, mobile blockedBy: k1, k2 -->
+- [ ] Test on device <!-- id: k2 blockedBy: k1 labels: mobile -->
+- [ ] Sem id ainda
+
+## Done
+
+- [x] Pipeline <!-- id: k1 -->
+''';
+
+    test('lê blockedBy em qualquer ordem com labels, sem misturar', () {
+      final doc = KanbanDocument.parse(board);
+      final publish = doc.cardById('k3')!;
+      expect(publish.labels, ['cd', 'mobile']);
+      expect(publish.blockedBy, ['k1', 'k2']);
+      final test = doc.cardById('k2')!;
+      expect(test.labels, ['mobile']);
+      expect(test.blockedBy, ['k1']);
+    });
+
+    test('bloqueio é derivado: bloqueador na última coluna não bloqueia', () {
+      final doc = KanbanDocument.parse(board);
+      expect(doc.isBlocked(doc.cardById('k2')!), isFalse, reason: 'k1 done');
+      expect(doc.isBlocked(doc.cardById('k3')!), isTrue, reason: 'k2 pendente');
+      expect(doc.blocksCount(doc.cardById('k1')!), 2);
+      expect(doc.blocksCount(doc.cardById('k2')!), 1);
+    });
+
+    test(
+      'setBlockedBy grava ids, atribui id a quem não tem e preserva labels',
+      () {
+        final doc = KanbanDocument.parse(board);
+        final semId = doc.columns[0].cards[2];
+        final content = KanbanEditor.setBlockedBy(doc, semId, [
+          doc.cardById('k3')!,
+          semId, // ignorado: não bloqueia a si mesmo
+        ]);
+        final next = KanbanDocument.parse(content);
+        final card = next.columns[0].cards[2];
+        expect(card.id, 'k4');
+        expect(card.blockedBy, ['k3']);
+        // Limpar mantém o id e os labels do card alvo.
+        final cleared = KanbanDocument.parse(
+          KanbanEditor.setBlockedBy(next, next.cardById('k3')!, const []),
+        );
+        final k3 = cleared.cardById('k3')!;
+        expect(k3.blockedBy, isEmpty);
+        expect(k3.labels, ['cd', 'mobile']);
+      },
+    );
+
+    test('id desconhecido não bloqueia e aparece em unknownBlockers', () {
+      final doc = KanbanDocument.parse(
+        '## A\n\n- [ ] X <!-- id: k1 blockedBy: k9 -->\n\n## Done\n',
+      );
+      final x = doc.cardById('k1')!;
+      expect(doc.isBlocked(x), isFalse);
+      expect(doc.unknownBlockers(x), ['k9']);
+    });
+  });
 }

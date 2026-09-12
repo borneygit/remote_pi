@@ -81,7 +81,14 @@ class _KanbanBoardViewState extends State<KanbanBoardView> {
   String _filterText = '';
   final Set<String> _filterLabels = <String>{};
 
-  bool get _filterActive => _filterText.isNotEmpty || _filterLabels.isNotEmpty;
+  /// `null` = tanto faz; `true` = só bloqueados; `false` = só prontos (sem
+  /// bloqueio pendente). Derivado do `blockedBy` na hora, nunca gravado.
+  bool? _filterBlocked;
+
+  bool get _filterActive =>
+      _filterText.isNotEmpty ||
+      _filterLabels.isNotEmpty ||
+      _filterBlocked != null;
 
   bool _matchesFilter(KanbanCard card) {
     if (_filterText.isNotEmpty &&
@@ -90,6 +97,9 @@ class _KanbanBoardViewState extends State<KanbanBoardView> {
     }
     if (_filterLabels.isNotEmpty && !card.labels.any(_filterLabels.contains)) {
       return false;
+    }
+    if (_filterBlocked case final wantBlocked?) {
+      if (_doc.isBlocked(card) != wantBlocked) return false;
     }
     return true;
   }
@@ -594,6 +604,9 @@ class _KanbanBoardViewState extends State<KanbanBoardView> {
                         KanbanEditor.toggleLabel(_doc, selected, label),
                       ),
                       onManageLabels: () => _showLabelsDialog(context),
+                      onSetBlockedBy: (blockers) => _apply(
+                        KanbanEditor.setBlockedBy(_doc, selected, blockers),
+                      ),
                       commentController: _commentCtrl,
                       composingComment: _composingComment,
                       onStartComment: () =>
@@ -702,11 +715,13 @@ class _KanbanBoardViewState extends State<KanbanBoardView> {
           labelColors: _doc.labelColors,
           text: _filterText,
           selected: _filterLabels,
-          onChanged: (text, labels) => setState(() {
+          blocked: _filterBlocked,
+          onChanged: (text, labels, blocked) => setState(() {
             _filterText = text;
             _filterLabels
               ..clear()
               ..addAll(labels);
+            _filterBlocked = blocked;
           }),
         ),
       ),
@@ -1382,17 +1397,12 @@ class _CardTile extends StatelessWidget {
                               color: colors.text4,
                             ),
                           ),
-                        ] else if (card.notes.isNotEmpty) ...[
-                          const SizedBox(height: 6),
-                          Text(
-                            card.notes.split('\n').first,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: typo.mono.copyWith(
-                              fontSize: 9.5,
-                              color: colors.text4,
-                            ),
-                          ),
+                        ] else ...[
+                          // Rodapé: número do card, comentários e dependência.
+                          // A nota fica só no painel de detalhe — no card ela
+                          // era uma linha cortada que não dizia nada.
+                          const SizedBox(height: 7),
+                          _CardFooter(card: card, doc: doc),
                         ],
                       ],
                     ),
@@ -1402,6 +1412,123 @@ class _CardTile extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Rodapé do card: `#id`, ícone de comentários com a contagem (só se há
+/// algum) e o estado de dependência — cadeado com "blocked by N" enquanto um
+/// bloqueador ainda não terminou, ou "blocks N" no card que segura outros.
+/// Tudo derivado do documento; nada aqui é editável.
+class _CardFooter extends StatelessWidget {
+  const _CardFooter({required this.card, required this.doc});
+
+  final KanbanCard card;
+  final KanbanDocument doc;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final typo = context.typo;
+    final tr = context.t.cockpit.kanbanView;
+    final small = typo.mono.copyWith(fontSize: 9.5, color: colors.text4);
+    // Só os bloqueadores PENDENTES contam: o que já chegou à última coluna
+    // não segura mais ninguém.
+    final last = doc.columns.length - 1;
+    final pending = [
+      for (final b in doc.blockersOf(card))
+        if (doc.columnOf(b) != last) b,
+    ];
+    final blocked = pending.isNotEmpty;
+    final blocks = doc.blocksCount(card);
+    Widget stat(IconData icon, String text, {Color? color, String? tip}) {
+      final row = Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 11, color: color ?? colors.text4),
+          const SizedBox(width: 3),
+          Text(text, style: small.copyWith(color: color)),
+        ],
+      );
+      if (tip == null) return row;
+      return Tooltip(
+        tooltip: TooltipContainer(child: Text(tip)).call,
+        child: row,
+      );
+    }
+
+    return Row(
+      children: [
+        if (card.id case final id?)
+          Text('#$id', style: small)
+        else
+          const SizedBox.shrink(),
+        const Spacer(),
+        if (card.comments.isNotEmpty) ...[
+          stat(Icons.chat_bubble_outline, '${card.comments.length}'),
+          const SizedBox(width: 8),
+        ],
+        if (blocked)
+          stat(
+            Icons.lock_outline,
+            tr.blockedByN(n: pending.length),
+            color: colors.warn,
+            tip: pending.map((b) => b.title).join('\n'),
+          )
+        else if (blocks > 0)
+          stat(Icons.account_tree_outlined, tr.blocksN(n: blocks)),
+      ],
+    );
+  }
+}
+
+/// Chip de bloqueador no painel de detalhe: título do card bloqueador (ou o
+/// id, quando desconhecido) e um `x` pra remover a dependência.
+class _BlockerChip extends StatelessWidget {
+  const _BlockerChip({
+    required this.title,
+    required this.done,
+    required this.onRemove,
+  });
+
+  final String title;
+  final bool done;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(7, 2, 4, 2),
+      decoration: BoxDecoration(
+        border: Border.all(color: done ? colors.border2 : colors.warn),
+        borderRadius: BorderRadius.circular(9),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 180),
+            child: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.typo.mono.copyWith(
+                fontSize: 10,
+                color: done ? colors.text4 : colors.text,
+                decoration: done ? TextDecoration.lineThrough : null,
+              ),
+            ),
+          ),
+          const SizedBox(width: 3),
+          HoverTap(
+            onTap: onRemove,
+            padding: const EdgeInsets.all(2),
+            borderRadius: BorderRadius.circular(4),
+            child: Icon(Icons.close, size: 10, color: colors.text3),
+          ),
+        ],
       ),
     );
   }
@@ -1581,6 +1708,7 @@ class _DetailPanel extends StatelessWidget {
     required this.onClose,
     required this.onToggleLabel,
     required this.onManageLabels,
+    required this.onSetBlockedBy,
     required this.commentController,
     required this.composingComment,
     required this.onStartComment,
@@ -1601,12 +1729,51 @@ class _DetailPanel extends StatelessWidget {
   final VoidCallback onClose;
   final void Function(String label) onToggleLabel;
   final VoidCallback onManageLabels;
+
+  /// Nova lista completa de bloqueadores (o painel monta a partir da atual).
+  final void Function(List<KanbanCard> blockers) onSetBlockedBy;
   final TextEditingController commentController;
   final bool composingComment;
   final VoidCallback onStartComment;
   final VoidCallback onAddComment;
   final VoidCallback onCancelComment;
   final void Function(KanbanComment comment) onDeleteComment;
+
+  /// Menu com busca listando os outros cards do quadro (coluna no rótulo);
+  /// escolher um adiciona à lista atual.
+  Future<void> _pickBlocker(
+    BuildContext anchor,
+    List<KanbanCard> current,
+  ) async {
+    final tr = anchor.t.cockpit.kanbanView;
+    final items = <AppMenuItem<int>>[];
+    for (final column in doc.columns) {
+      for (final c in column.cards) {
+        if (!c.recognized || c.startLine == card.startLine) continue;
+        if (current.any((o) => o.startLine == c.startLine)) continue;
+        items.add(
+          AppMenuItem(
+            value: c.startLine,
+            label: '${c.title}  ·  ${column.name}',
+            icon: Icons.crop_square,
+          ),
+        );
+      }
+    }
+    if (items.isEmpty) return;
+    final picked = await showAppMenu<int>(
+      anchor,
+      items: items,
+      minWidth: 260,
+      searchHint: tr.searchCards,
+      searchThreshold: 6,
+    );
+    if (picked == null) return;
+    final chosen = doc.columns
+        .expand((c) => c.cards)
+        .firstWhere((c) => c.startLine == picked);
+    onSetBlockedBy([...current, chosen]);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1706,6 +1873,54 @@ class _DetailPanel extends StatelessWidget {
                       onTap: onManageLabels,
                     ),
                   ],
+                ),
+                const SizedBox(height: 11),
+                // Dependências: quem segura este card. Chips com o título do
+                // bloqueador (riscado quando já terminou) e um botão que abre
+                // o picker de cards por título. O inverso ("bloqueia N") é só
+                // informativo, no rodapé do card.
+                Builder(
+                  builder: (anchor) {
+                    final blockers = doc.blockersOf(card);
+                    final unknown = doc.unknownBlockers(card);
+                    final last = doc.columns.length - 1;
+                    return Wrap(
+                      spacing: 5,
+                      runSpacing: 5,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Text(
+                          tr.blockedBy.toUpperCase(),
+                          style: typo.mono.copyWith(
+                            fontSize: 10,
+                            letterSpacing: 0.9,
+                            color: colors.text4,
+                          ),
+                        ),
+                        for (final b in blockers)
+                          _BlockerChip(
+                            title: b.title,
+                            done: doc.columnOf(b) == last,
+                            onRemove: () => onSetBlockedBy([
+                              for (final o in blockers)
+                                if (o.startLine != b.startLine) o,
+                            ]),
+                          ),
+                        for (final id in unknown)
+                          _BlockerChip(
+                            title: '$id (${tr.unknownCard})',
+                            done: true,
+                            onRemove: () => onSetBlockedBy(blockers),
+                          ),
+                        if (card.recognized)
+                          _IconAction(
+                            icon: Icons.add_link,
+                            tooltip: tr.addBlocker,
+                            onTap: () => _pickBlocker(anchor, blockers),
+                          ),
+                      ],
+                    );
+                  },
                 ),
                 const SizedBox(height: 11),
                 Row(
@@ -2105,6 +2320,7 @@ class _FilterPopup extends StatefulWidget {
     required this.labelColors,
     required this.text,
     required this.selected,
+    required this.blocked,
     required this.onChanged,
   });
 
@@ -2112,7 +2328,8 @@ class _FilterPopup extends StatefulWidget {
   final Map<String, KanbanLabelColor> labelColors;
   final String text;
   final Set<String> selected;
-  final void Function(String text, Set<String> labels) onChanged;
+  final bool? blocked;
+  final void Function(String text, Set<String> labels, bool? blocked) onChanged;
 
   @override
   State<_FilterPopup> createState() => _FilterPopupState();
@@ -2123,6 +2340,7 @@ class _FilterPopupState extends State<_FilterPopup> {
     text: widget.text,
   );
   late final Set<String> _selected = {...widget.selected};
+  late bool? _blocked = widget.blocked;
 
   @override
   void dispose() {
@@ -2130,14 +2348,17 @@ class _FilterPopupState extends State<_FilterPopup> {
     super.dispose();
   }
 
-  void _emit() => widget.onChanged(_ctrl.text.trim(), _selected);
+  void _emit() => widget.onChanged(_ctrl.text.trim(), _selected, _blocked);
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final typo = context.typo;
     final tr = context.t.cockpit.kanbanView;
-    final hasAny = _ctrl.text.trim().isNotEmpty || _selected.isNotEmpty;
+    final hasAny =
+        _ctrl.text.trim().isNotEmpty ||
+        _selected.isNotEmpty ||
+        _blocked != null;
     return ConstrainedBox(
       constraints: const BoxConstraints(minWidth: 240, maxWidth: 320),
       child: MenuPopup(
@@ -2199,6 +2420,41 @@ class _FilterPopupState extends State<_FilterPopup> {
                     ],
                   ),
                 ],
+                const SizedBox(height: 10),
+                Text(
+                  tr.filterDependencies,
+                  style: typo.mono.copyWith(
+                    fontSize: 10,
+                    letterSpacing: 0.8,
+                    color: colors.text4,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 6,
+                  children: [
+                    _FilterLabelChip(
+                      key: const ValueKey('kanban-filter-blocked'),
+                      label: tr.filterBlocked,
+                      color: KanbanLabelColor.red,
+                      selected: _blocked == true,
+                      onTap: () => setState(() {
+                        _blocked = _blocked == true ? null : true;
+                        _emit();
+                      }),
+                    ),
+                    _FilterLabelChip(
+                      key: const ValueKey('kanban-filter-ready'),
+                      label: tr.filterReady,
+                      color: KanbanLabelColor.green,
+                      selected: _blocked == false,
+                      onTap: () => setState(() {
+                        _blocked = _blocked == false ? null : false;
+                        _emit();
+                      }),
+                    ),
+                  ],
+                ),
                 if (hasAny) ...[
                   const SizedBox(height: 10),
                   Align(
@@ -2209,6 +2465,7 @@ class _FilterPopupState extends State<_FilterPopup> {
                       onPressed: () => setState(() {
                         _ctrl.clear();
                         _selected.clear();
+                        _blocked = null;
                         _emit();
                       }),
                       child: Text(tr.filterClear),
