@@ -406,8 +406,9 @@ class CockpitCliHandler {
           }
           final out = <Map<String, dynamic>>[];
           for (final e in await _vm.listChildren(dir)) {
-            if (e.isDirectory || !e.name.toLowerCase().endsWith('.md'))
+            if (e.isDirectory || !e.name.toLowerCase().endsWith('.md')) {
               continue;
+            }
             final raw = await _vm.readTextAt(e.path);
             if (raw == null) continue;
             final n = NotebookNote.parse(e.path, raw);

@@ -94,9 +94,11 @@ class AgentMarkdown extends StatelessWidget {
             GptMarkdown(
               body,
               style: typo.body.copyWith(color: colors.text),
-              // `code` inline — fundo sutil, mono.
-              highlightBuilder: (context, text, style) => Text(
-                text,
+              // `code` inline — fundo sutil, mono. Devolve um span (não um
+              // widget) pra ficar na baseline do texto, quebrar linha e ser
+              // selecionável junto com o parágrafo.
+              inlineCodeBuilder: (context, text, style, codeStyle) => TextSpan(
+                text: text,
                 style: typo.mono.copyWith(
                   fontSize: 12,
                   color: colors.text,

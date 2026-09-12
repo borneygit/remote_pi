@@ -92,7 +92,7 @@ class EnvironmentProbeImpl implements EnvironmentProbe {
         }
         // Secundário: o launcher VBS escrito no install (em ~/.pi/remote/).
         final vbs = File('$home/.pi/remote/RemotePiSupervisorLauncher.vbs');
-        return vbs.exists();
+        return await vbs.exists();
       }
       // Fallback: o binário existe em algum prefixo de usuário conhecido.
       const candidates = <String>[
@@ -103,7 +103,7 @@ class EnvironmentProbeImpl implements EnvironmentProbe {
         if (await File(candidate).exists()) return true;
       }
       final local = '$home/.local/bin/pi-supervisord';
-      return File(local).exists();
+      return await File(local).exists();
     } catch (_) {
       return false;
     }

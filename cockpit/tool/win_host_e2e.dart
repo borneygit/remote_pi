@@ -21,8 +21,7 @@ import 'package:cockpit/app/cockpit/data/remote/host_shell/windows_host_shell.da
 import 'package:cockpit/app/cockpit/data/remote/dartssh_host_connection.dart';
 import 'package:cockpit/app/cockpit/data/remote/ssh_worker_connection.dart';
 import 'package:cockpit/app/cockpit/data/remote/ssh_tunnel.dart';
-import 'package:dartssh2/dartssh2.dart';
-import 'package:cockpit_core/cockpit_core.dart';
+import 'package:cockpit_core/cockpit_core.dart' hide SshTunnel;
 import 'package:cockpit_remote/cockpit_remote.dart';
 
 var _failures = 0;

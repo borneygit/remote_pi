@@ -161,7 +161,7 @@ class TerminalStatusServerImpl implements TerminalStatusServer {
           null,
         );
       }
-      if (isCmd) return _dispatchCommand(decoded);
+      if (isCmd) return await _dispatchCommand(decoded);
       // Caminho de status (default / `type` ausente): fire-and-forget.
       final paneId = (decoded['paneId'] ?? '').toString();
       final status = (decoded['st'] ?? '').toString();

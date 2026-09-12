@@ -7,13 +7,6 @@ labels: {bug: red, cd: orange, mobile: blue, docs: green, feature: purple, secur
 ## Backlog
 
 
-- [ ] Consolidated 2.0.0 release notes <!-- labels: docs -->
-      Every 1.x since 1.28.0 is a 2.0 beta. Write the single 2.0.0 section from the 1.x changelog entries; it is what Sparkle and the download page will show.
-
-
-- [ ] Analyzer noise in tool/ and packages/ <!-- labels: hygiene -->
-      About 260 warnings from newer SDK lints, none in lib/. Clean them or scope the analyzer so real issues are visible again.
-
 
 - [ ] Redact injected secrets in terminal output <!-- labels: security -->
       Cockpit knows the values it injected from .env.cockpit; replace them with *** in the scrollback and in hook output before an agent transcript sees them.
@@ -90,6 +83,9 @@ labels: {bug: red, cd: orange, mobile: blue, docs: green, feature: purple, secur
 - [ ] Multi-window: detach a terminal tab <!-- labels: feature -->
       Needs the PTY hosted outside the window process. The sidecar terminal gateway (remote mode) already does that: make it the default local path, then detaching becomes attaching the same session id in another window. Bonus: terminals survive a UI crash. Decide whether this lands in 2.0 or after.
 
+- [ ] Consolidated 2.0.0 release notes <!-- id: k1 labels: docs -->
+      Every 1.x since 1.28.0 is a 2.0 beta. Write the single 2.0.0 section from the 1.x changelog entries; it is what Sparkle and the download page will show.
+
 - [ ] Remove the native Pi agent (pi --mode rpc) from the binary <!-- labels: feature -->
       Decided 2026-09-12: the native agent tab is deprecated and leaves in 2.0. Few people use it, the terminal path (claude, codex, pi in a terminal tab with hooks) is the product, and the agent tab never got .env.cockpit, Restart or extension UI requests. Delete the agent tab, the RPC harness (cockpit/data/rpc), the composer, the enableAgent setting and its migration, the pi daemon/cron integration that depends on it, and the i18n keys. Do it LAST, right before the store publications, so nothing else on this board depends on the removal and the binary ships without it. Closes the "Pi extension UI requests are dropped" bug as won't fix.
 
@@ -113,4 +109,7 @@ labels: {bug: red, cd: orange, mobile: blue, docs: green, feature: purple, secur
 
 - [x] Green test suite on main <!-- labels: hygiene -->
       Done 2026-09-12: 1412 passing, 0 failing. The two hamburger-menu tests still described the old nested submenus (the menu was flattened on purpose in 64b7e36d) and were rewritten for the flat sections. The two xterm IME tests failed because flutter_test reports Android, where the terminal only opens its text-input connection after a tap (317e6a94); they now pin the desktop platform during the initial pump. No production code changed.
+
+- [x] Analyzer noise in tool/ and packages/ <!-- labels: hygiene -->
+      Done 2026-09-12: `flutter analyze` reports zero issues. packages/** and tool/wave*/** are excluded from the root analysis (own pubspec/context; run `dart analyze` inside each package). The 56 real lints in lib/ were fixed: initializing formals, curly braces, six missing awaits inside try blocks, the deprecated gpt_markdown highlightBuilder (now inlineCodeBuilder returning a span), a private render type in a public API, an unused test class and an ambiguous import in the e2e script.
 

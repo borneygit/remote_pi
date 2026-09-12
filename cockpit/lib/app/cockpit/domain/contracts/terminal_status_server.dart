@@ -50,15 +50,18 @@ enum AgentHarness {
 
   /// Comando que reata a sessão [sessionId] num shell novo.
   String resumeCommand(String sessionId) => switch (this) {
-    AgentHarness.claude => sessionId == 'latest' || sessionId.isEmpty
-        ? 'claude -c'
-        : 'claude --resume $sessionId',
-    AgentHarness.codex => sessionId == 'latest' || sessionId.isEmpty
-        ? 'codex resume --last'
-        : 'codex resume $sessionId',
-    AgentHarness.pi => sessionId == 'latest' || sessionId.isEmpty
-        ? 'pi -c'
-        : 'pi --session $sessionId',
+    AgentHarness.claude =>
+      sessionId == 'latest' || sessionId.isEmpty
+          ? 'claude -c'
+          : 'claude --resume $sessionId',
+    AgentHarness.codex =>
+      sessionId == 'latest' || sessionId.isEmpty
+          ? 'codex resume --last'
+          : 'codex resume $sessionId',
+    AgentHarness.pi =>
+      sessionId == 'latest' || sessionId.isEmpty
+          ? 'pi -c'
+          : 'pi --session $sessionId',
   };
 
   /// Converte o nome do wire. Desconhecido ou ausente cai em [claude]: layouts

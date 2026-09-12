@@ -24,21 +24,6 @@ class _CountingReader implements GitStatusReader {
   }
 }
 
-class _GatedReader implements GitStatusReader {
-  final gates = <String, Completer<void>>{};
-  var active = 0;
-  var maxActive = 0;
-
-  @override
-  Future<GitInfo?> read(String path) async {
-    active++;
-    if (active > maxActive) maxActive = active;
-    await gates.putIfAbsent(path, Completer<void>.new).future;
-    active--;
-    return null;
-  }
-}
-
 /// Runner que nunca é exercido neste teste (o poll só lê estado).
 class _UnusedRunner implements GitCommandRunner {
   @override
@@ -145,13 +130,17 @@ void main() {
       ];
       await pumpEventQueue();
       expect(maxActive, 2);
-    expect(duplicateRuns, 1, reason: 'rerun waits for the active flight');
+      expect(duplicateRuns, 1, reason: 'rerun waits for the active flight');
       gates['a']!.complete();
       await pumpEventQueue();
-    gates['b']!.complete();
-    gates['c']!.complete();
-    await Future.wait(futures);
-    expect(duplicateRuns, 2, reason: 'active duplicate coalesces to one rerun');
+      gates['b']!.complete();
+      gates['c']!.complete();
+      await Future.wait(futures);
+      expect(
+        duplicateRuns,
+        2,
+        reason: 'active duplicate coalesces to one rerun',
+      );
       expect(maxActive, 2);
     },
   );
