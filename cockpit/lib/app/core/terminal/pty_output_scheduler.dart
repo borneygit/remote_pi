@@ -121,6 +121,8 @@ final class PtyOutputScheduler {
     final startedAt = _clockMicros();
     final timeBudget = maxWorkPerFrame.inMicroseconds;
     var charBudget = maxCharsPerFrame;
+    var processedChars = 0;
+    var hiddenChars = 0;
 
     try {
       while (_ready.isNotEmpty && charBudget > 0) {
@@ -132,6 +134,8 @@ final class PtyOutputScheduler {
           math.min(maxSliceChars, charBudget),
         );
         charBudget -= processed;
+        processedChars += processed;
+        if (!source.visible) hiddenChars += processed;
 
         // Reinsere no fim: mesmo uma fonte muito ruidosa não monopoliza o
         // frame enquanto outra aguarda.
@@ -147,6 +151,8 @@ final class PtyOutputScheduler {
         PerfField.durationUs: _clockMicros() - startedAt,
         PerfField.pending: _pendingChars,
         PerfField.sources: _ready.length,
+        PerfField.processedChars: processedChars,
+        PerfField.hiddenChars: hiddenChars,
       });
       _ensureFrame();
     }
@@ -195,6 +201,9 @@ final class PtyOutputCoalescer {
 
   int get pendingLength => _pendingLength;
   bool get ackPaused => _ackPaused;
+
+  /// Apenas para diagnóstico: output oculto ainda precisa passar pelo parser.
+  bool visible = true;
   bool get _hasPending => _pendingLength > 0;
 
   /// Completa quando tudo que já entrou foi entregue ao consumidor.

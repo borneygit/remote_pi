@@ -233,7 +233,7 @@ void main() {
       monitor.dispose();
     });
 
-    test('becoming visible triggers an immediate coalesced refresh', () async {
+    test('visibility changes do not trigger a process scan', () async {
       final fakeProvider = FakeProcessTreeProvider();
       final monitor = TerminalHarnessMonitor(
         provider: fakeProvider,
@@ -250,7 +250,10 @@ void main() {
 
       monitor.setSessionVisible('session-1', true);
       await pumpEventQueue();
-      expect(fakeProvider.callCount, beforeVisible + 1);
+      expect(fakeProvider.callCount, beforeVisible);
+      monitor.setSessionVisible('session-1', false);
+      await pumpEventQueue();
+      expect(fakeProvider.callCount, beforeVisible);
       monitor.dispose();
     });
   });

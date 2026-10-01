@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:cockpit/app/cockpit/domain/contracts/process_tree_provider.dart';
 import 'package:cockpit/app/cockpit/domain/entities/process_snapshot.dart';
@@ -46,11 +47,25 @@ class TerminalHarnessMonitor {
     this.wslProviderForDistro,
     // Baseline safety net for silent exits / nested tools. Interactive
     // launches are kicked immediately from TerminalSession (Enter/output).
-    this.pollInterval = const Duration(seconds: 2),
-    this.idlePollInterval = const Duration(seconds: 5),
-    this.inactivePollInterval = const Duration(seconds: 10),
+    Duration? pollInterval,
+    Duration? idlePollInterval,
+    Duration? inactivePollInterval,
     this.windowIsActive,
-  });
+  }) : pollInterval =
+           pollInterval ??
+           (Platform.isWindows
+               ? const Duration(seconds: 8)
+               : const Duration(seconds: 2)),
+       idlePollInterval =
+           idlePollInterval ??
+           (Platform.isWindows
+               ? const Duration(seconds: 20)
+               : const Duration(seconds: 5)),
+       inactivePollInterval =
+           inactivePollInterval ??
+           (Platform.isWindows
+               ? const Duration(seconds: 30)
+               : const Duration(seconds: 10));
 
   bool get isRunning => _anchors.isNotEmpty && (_timer != null || _inFlight);
   int get registeredCount => _anchors.length;
@@ -106,8 +121,11 @@ class TerminalHarnessMonitor {
     final anchor = _anchors[sessionId];
     if (anchor == null || anchor.visible == visible) return;
     anchor.visible = visible;
-    anchor.lastActivity = DateTime.now();
-    if (visible) requestPoll(sessionId: sessionId);
+    // Switching tabs or workspaces changes visibility, not the process tree.
+    // On Windows an eager poll starts a full CIM scan for every switch.
+    // Terminal input/output still calls requestPoll for real activity.
+    if (visible) anchor.lastActivity = DateTime.now();
+    if (!_inFlight) _scheduleNextPoll();
   }
 
   void _scheduleNextPoll() {
