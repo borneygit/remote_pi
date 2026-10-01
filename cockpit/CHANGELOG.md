@@ -24,6 +24,28 @@ As versões seguem o `version:` do `pubspec.yaml` (SSOT). O campo `notes` do
     linhas não-vazias — o começo da seção deve fazer sentido sozinho.
 -->
 
+## [2.1.8] - 2026-10-01
+
+**Faster terminals and window actions on Windows.** Process scans behind the
+agent status badge now look only at the terminal's own descendants, the
+folder picker no longer stalls the UI, and opening, docking and closing
+terminals is traced so the remaining latency can be measured.
+
+### Changed
+
+- **Windows process scans**: the harness monitor (the badge that says which
+  agent runs in a tab) used to walk the whole process table; it now walks only
+  the descendants of each terminal's shell, with a native snapshot. Less CPU
+  while agents stream output.
+- **Windows folder picker**: the "Add workspace" picker runs off the UI
+  isolate, so the window no longer freezes while the dialog is open.
+- **Window close on Windows**: shutting down terminals no longer blocks the
+  close button; PTY shutdown is benchmarked (`tool/benchmark_pty_lifecycle`).
+- **Performance diagnostics**: new metrics for opening a terminal, first
+  output, docking a tab and project readiness, recorded with `COCKPIT_PERF=1`
+  or Developer mode (see `docs/telemetry.md` and the 2026-09-30 investigation
+  in `docs/`).
+
 ## [2.1.7] - 2026-09-28
 
 **`.panel` files now open as a live page in their own document window.**
