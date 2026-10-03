@@ -377,6 +377,15 @@ dependency_overrides:
   # mesmo quando a TUI liga mouse tracking (Claude Code, vim). Antes o clique
   # ia pro app e o link so realcava. Clique sem modificador segue indo pro app.
   #
+  # Tag cockpit-pin-flterm-upstream-2026-10 (735e10d): refresh completo sobre
+  # o upstream main de 2026-10-02 (branch integrate/upstream-main-2026-10), com
+  # os 6 patches nossos reportados pra nova arquitetura de input (recover/reopen
+  # do text input iOS x3, dead keys sob Kitty, Cmd+char chord pro app, clique
+  # modificado abre link sob mouse tracking). Traz do upstream: busca no
+  # terminal, snapshots, alcas de selecao por toque + lupa (iPad), APIs de
+  # clipboard, Ctrl+Space como chord, fixes de Kitty graphics. O C API do
+  # Ghostty mudou (simbolos novos, ex.: ghostty_search_new): dylib nova.
+  #
   # ATENCAO CI: ao trocar esta ref muda o ghostty.version; o cache de native
   # asset (.dart_tool/hooks_runner, build/native_assets) precisa ser invalidado,
   # senao a dylib velha crasha o processo (exit -10) ao carregar os bindings novos.
@@ -386,10 +395,10 @@ dependency_overrides:
   flterm:
     git:
       url: https://github.com/jacobaraujo7/libghostty.git
-      ref: cockpit-pin-flterm-link-click
+      ref: cockpit-pin-flterm-upstream-2026-10
       path: packages/flterm
   libghostty:
     git:
       url: https://github.com/jacobaraujo7/libghostty.git
-      ref: cockpit-pin-flterm-link-click
+      ref: cockpit-pin-flterm-upstream-2026-10
       path: packages/libghostty
