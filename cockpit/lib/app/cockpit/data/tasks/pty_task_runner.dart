@@ -839,7 +839,16 @@ class PtyTaskRunner implements TaskRunnerGateway, ReconciledTaskRunnerGateway {
   /// Junta executável + args numa linha de shell, citando o que tem espaço.
   String _join(List<String> parts) => parts.map(_quote).join(' ');
 
+  /// POSIX: aspas simples (`'\''` escapa a aspa). Windows: a linha vai pro
+  /// `cmd.exe /c` e o filho a re-parseia com as regras do CRT
+  /// (CommandLineToArgvW): aspas DUPLAS, `\"` escapa a aspa interna. Citar em
+  /// aspas simples aqui entregava `'$env:PATH = ...'` literal pro pwsh — todo
+  /// arg com espaço, `$` ou aspas quebrava no Windows.
   String _quote(String s) {
+    if (Platform.isWindows) {
+      if (s.isNotEmpty && !RegExp(r'[\s"]').hasMatch(s)) return s;
+      return '"${s.replaceAll('"', r'\"')}"';
+    }
     if (s.isNotEmpty && !RegExp(r'''[\s"'$`\\]''').hasMatch(s)) return s;
     return "'${s.replaceAll("'", r"'\''")}'";
   }

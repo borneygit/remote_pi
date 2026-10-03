@@ -53,7 +53,7 @@ static BOOL CALLBACK resolve_conpty(PINIT_ONCE once, PVOID param, PVOID *ctx)
             slash[1] = L'\0';
             if (wcslen(path) + wcslen(L"conpty.dll") < MAX_PATH)
             {
-                wcscat(path, L"conpty.dll");
+                wcscat_s(path, MAX_PATH, L"conpty.dll");
                 // ALTERED_SEARCH_PATH: dependências do conpty.dll (e o próprio
                 // OpenConsole.exe que ele spawna) resolvem a partir da pasta dele.
                 bundled = LoadLibraryExW(path, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
