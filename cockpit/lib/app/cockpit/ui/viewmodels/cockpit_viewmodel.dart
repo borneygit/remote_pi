@@ -4822,6 +4822,19 @@ class CockpitViewModel extends ChangeNotifier implements DocumentHost {
     final tree = _activeTree;
     if (projectId == null || tree == null) return;
     final paneId = _focused[projectId] ?? leaves(tree).first.id;
+    newTerminalInPane(paneId, subRelative: subRelative, profile: profile);
+  }
+
+  /// Cria o terminal diretamente na pane que recebeu o clique no `+`.
+  /// Evita montar um EmptyTab e esperar outro frame para iniciar o shell.
+  void newTerminalInPane(
+    String paneId, {
+    String subRelative = '',
+    TerminalProfile? profile,
+  }) {
+    final projectId = _selectedProjectId;
+    final tree = _activeTree;
+    if (projectId == null || tree == null) return;
     final leaf = findLeaf(tree, paneId) ?? leaves(tree).first;
     final s = _spawn(subRelative, profile: profile);
 

@@ -207,6 +207,37 @@ void main() {
       monitor.dispose();
     });
 
+    test(
+      'activity from many terminals does not start scans continuously',
+      () async {
+        final fakeProvider = FakeProcessTreeProvider();
+        final monitor = TerminalHarnessMonitor(
+          provider: fakeProvider,
+          pollInterval: const Duration(days: 1),
+          activityPollCooldown: const Duration(milliseconds: 200),
+        );
+        for (var i = 0; i < 8; i++) {
+          monitor.registerSession(
+            sessionId: 'session-$i',
+            rootPid: () => 100 + i,
+            onHarnessChanged: (_) {},
+          );
+        }
+        await pumpEventQueue();
+        final beforeActivity = fakeProvider.callCount;
+
+        for (var i = 0; i < 80; i++) {
+          monitor.requestPoll(sessionId: 'session-${i % 8}');
+        }
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        expect(fakeProvider.callCount, beforeActivity);
+
+        await Future<void>.delayed(const Duration(milliseconds: 210));
+        expect(fakeProvider.callCount, beforeActivity + 1);
+        monitor.dispose();
+      },
+    );
+
     test('hidden stable sessions use the idle safety interval', () async {
       final fakeProvider = FakeProcessTreeProvider();
       final monitor = TerminalHarnessMonitor(

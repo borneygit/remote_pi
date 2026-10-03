@@ -32,11 +32,15 @@ class TerminalHarnessMonitor {
   final Duration pollInterval;
   final Duration idlePollInterval;
   final Duration inactivePollInterval;
+  final Duration activityPollCooldown;
   final bool Function()? windowIsActive;
 
   Timer? _timer;
   bool _inFlight = false;
   bool _pendingPoll = false;
+  bool _pendingActivityPoll = false;
+  Timer? _activityTimer;
+  DateTime? _lastPollCompletedAt;
   final Map<String, SessionAnchor> _anchors = {};
   final Map<String, HarnessKind?> _lastKnownHarness = {};
   final Map<String, ProcessTreeProvider> _wslProviderCache = {};
@@ -50,6 +54,7 @@ class TerminalHarnessMonitor {
     Duration? pollInterval,
     Duration? idlePollInterval,
     Duration? inactivePollInterval,
+    Duration? activityPollCooldown,
     this.windowIsActive,
   }) : pollInterval =
            pollInterval ??
@@ -65,9 +70,16 @@ class TerminalHarnessMonitor {
            inactivePollInterval ??
            (Platform.isWindows
                ? const Duration(seconds: 30)
-               : const Duration(seconds: 10));
+               : const Duration(seconds: 10)),
+       activityPollCooldown =
+           activityPollCooldown ??
+           (Platform.isWindows
+               ? const Duration(seconds: 1)
+               : const Duration(milliseconds: 250));
 
-  bool get isRunning => _anchors.isNotEmpty && (_timer != null || _inFlight);
+  bool get isRunning =>
+      _anchors.isNotEmpty &&
+      (_timer != null || _activityTimer != null || _inFlight);
   int get registeredCount => _anchors.length;
 
   void registerSession({
@@ -96,7 +108,10 @@ class TerminalHarnessMonitor {
 
     if (_anchors.isEmpty) {
       _stopTimer();
+      _activityTimer?.cancel();
+      _activityTimer = null;
       _pendingPoll = false;
+      _pendingActivityPoll = false;
     }
   }
 
@@ -105,7 +120,11 @@ class TerminalHarnessMonitor {
     if (_anchors.isEmpty) return;
     if (sessionId != null) {
       _anchors[sessionId]?.lastActivity = DateTime.now();
+      _requestActivityPoll();
+      return;
     }
+    _activityTimer?.cancel();
+    _activityTimer = null;
     _timer?.cancel();
     _timer = null;
     if (_inFlight) {
@@ -113,6 +132,30 @@ class TerminalHarnessMonitor {
       return;
     }
     unawaited(poll());
+  }
+
+  /// Output de várias PTYs pode chegar sem parar. Cada sessão limita seus
+  /// próprios kicks, mas sem limite global o fim de um scan iniciava outro
+  /// imediatamente enquanto qualquer PTY continuasse emitindo. Limitar só
+  /// estes pedidos preserva o scan inicial e o safety poll periódico.
+  void _requestActivityPoll() {
+    if (_inFlight) {
+      _pendingActivityPoll = true;
+      return;
+    }
+    if (_activityTimer != null) return;
+    final last = _lastPollCompletedAt;
+    final remaining = last == null
+        ? Duration.zero
+        : activityPollCooldown - DateTime.now().difference(last);
+    if (remaining <= Duration.zero) {
+      requestPoll();
+      return;
+    }
+    _activityTimer = Timer(remaining, () {
+      _activityTimer = null;
+      if (_anchors.isNotEmpty) requestPoll();
+    });
   }
 
   /// Informa se uma sessão tem superfície visível. A sessão e seu PTY
@@ -210,6 +253,7 @@ class TerminalHarnessMonitor {
     } catch (_) {
       // Fallback silently on error
     } finally {
+      _lastPollCompletedAt = DateTime.now();
       PerformanceDiagnostics.instance.record(PerfMetric.processScan, {
         PerfField.durationUs: stopwatch.elapsedMicroseconds,
         PerfField.sessions: _anchors.length,
@@ -218,6 +262,9 @@ class TerminalHarnessMonitor {
       if (_pendingPoll && _anchors.isNotEmpty) {
         _pendingPoll = false;
         scheduleMicrotask(requestPoll);
+      } else if (_pendingActivityPoll && _anchors.isNotEmpty) {
+        _pendingActivityPoll = false;
+        _requestActivityPoll();
       } else {
         _scheduleNextPoll();
       }
@@ -261,9 +308,12 @@ class TerminalHarnessMonitor {
 
   void dispose() {
     _stopTimer();
+    _activityTimer?.cancel();
+    _activityTimer = null;
     _anchors.clear();
     _lastKnownHarness.clear();
     _wslProviderCache.clear();
     _pendingPoll = false;
+    _pendingActivityPoll = false;
   }
 }

@@ -1099,7 +1099,7 @@ class _ProjectMultiplexer extends StatelessWidget {
           vm: vm,
           focused: active && node.id == vm.focusedPaneId(projectId),
           active: active,
-          onCreateTab: () => vm.newEmptyTab(node.id),
+          onCreateTab: () => vm.newTerminalInPane(node.id),
           // Aba placeholder "Novo": o novo pane vira outro placeholder (que
           // cai direto em terminal). As demais abrem na raiz do workspace.
           onSplit: (dir) {
