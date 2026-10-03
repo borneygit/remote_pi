@@ -5149,11 +5149,15 @@ class CockpitViewModel extends ChangeNotifier implements DocumentHost {
   /// Digita [command] + Enter no terminal [tabId] após uma folga pro shell
   /// terminar o boot (.zshrc etc). O PTY bufferiza, mas shells com zle podem
   /// descartar input chegado no meio do init — a folga evita isso.
+  ///
+  /// Enter é `\r` (o byte da tecla), igual ao `startupCommand` da restauração:
+  /// `\n` só submete em tty Unix; no ConPTY/PSReadLine vira quebra de linha no
+  /// buffer e o comando fica esperando um Enter manual.
   void _typeWhenReady(String tabId, String command) {
     unawaited(
       Future<void>.delayed(const Duration(milliseconds: 700)).then((_) {
         final s = _sessions[tabId];
-        if (s is TerminalSession) s.insertText('$command\n');
+        if (s is TerminalSession) s.insertText('$command\r');
       }),
     );
   }
