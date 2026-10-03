@@ -7,6 +7,7 @@ import 'package:cockpit/app/cockpit/ui/widgets/webview_chrome.dart';
 import 'package:cockpit/app/core/ui/themes/themes.dart';
 import 'package:cockpit/app/core/ui/widgets/unzoomed_native_view.dart';
 import 'package:flutter/foundation.dart' show mapEquals;
+import 'package:flutter/gestures.dart' show PointerScrollEvent;
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
@@ -100,6 +101,41 @@ class _WebMarkdownPreviewState extends State<WebMarkdownPreview> {
     });
   }
 
+  /// Windows: a rolagem é feita pela página, a partir dos deltas do Flutter.
+  ///
+  /// O plugin (`flutter_inappwebview_windows` 0.6.0) repassa roda e gesto de
+  /// touchpad ao WebView2 como `SendMouseInput` de roda. O gesto chegava ao
+  /// Flutter nos dois sentidos (medido: 38 gestos, 17 pra cima), mas pela
+  /// injeção do plugin subia travado ou nem rolava. Aqui os mesmos eventos
+  /// viram `window.scrollBy` na página, e a roda nativa é bloqueada nela
+  /// (`captureScroll`) pra não rolar em dobro. macOS não passa por aqui: o
+  /// WKWebView recebe o mouse direto do AppKit.
+  Widget _windowsScroll(Widget child) {
+    if (!Platform.isWindows) return child;
+    return Listener(
+      onPointerSignal: (e) {
+        if (e is PointerScrollEvent) {
+          _scrollBy(e.scrollDelta.dx, e.scrollDelta.dy);
+        }
+      },
+      // Touchpad: o conteúdo acompanha os dedos (rolagem natural), então o
+      // deslocamento da página é o inverso do pan.
+      onPointerPanZoomUpdate: (e) => _scrollBy(-e.panDelta.dx, -e.panDelta.dy),
+      child: child,
+    );
+  }
+
+  void _scrollBy(double dx, double dy) {
+    final web = _web;
+    if (web == null || !_loaded || (dx == 0 && dy == 0)) return;
+    unawaited(
+      web.evaluateJavascript(
+        source:
+            'window.__cockpit.scrollBy && window.__cockpit.scrollBy($dx, $dy);',
+      ),
+    );
+  }
+
   /// `--ckp-bg: #...; --ckp-text: #...;` pro `:root` do esqueleto.
   static String _themeCss(Map<String, String> vars) =>
       vars.entries.map((e) => '${e.key}: ${e.value};').join(' ');
@@ -157,7 +193,10 @@ class _WebMarkdownPreviewState extends State<WebMarkdownPreview> {
     await web.evaluateJavascript(
       source:
           'window.__cockpit.setTheme($theme);'
-          'window.__cockpit.setContent($text, $dir);',
+          'window.__cockpit.setContent($text, $dir);'
+          // Windows: rolagem pela página (ver [_windowsScroll]). Na mesma
+          // chamada do conteúdo e com guarda: nunca pode impedir o render.
+          '${Platform.isWindows ? 'if (window.__cockpit.captureScroll) window.__cockpit.captureScroll();' : ''}',
     );
   }
 
@@ -213,41 +252,43 @@ class _WebMarkdownPreviewState extends State<WebMarkdownPreview> {
     // isso a seleção de texto cai deslocada. Ver [UnzoomedNativeView].
     return WebViewCover(
       loaded: _loaded,
-      child: WebViewEnvironmentGate(
-        builder: (context, environment) => UnzoomedNativeView(
-          builder: (context, contentZoom) => InAppWebView(
-            webViewEnvironment: environment,
-            initialData: InAppWebViewInitialData(data: html),
-            initialUserScripts: kWebViewUserScripts,
-            initialSettings: InAppWebViewSettings(
-              javaScriptEnabled: true,
-              resourceCustomSchemes: ['ckp-res'],
-              isInspectable: false,
-              underPageBackgroundColor: webViewBackground(context),
-              pageZoom: contentZoom,
+      child: _windowsScroll(
+        WebViewEnvironmentGate(
+          builder: (context, environment) => UnzoomedNativeView(
+            builder: (context, contentZoom) => InAppWebView(
+              webViewEnvironment: environment,
+              initialData: InAppWebViewInitialData(data: html),
+              initialUserScripts: kWebViewUserScripts,
+              initialSettings: InAppWebViewSettings(
+                javaScriptEnabled: true,
+                resourceCustomSchemes: ['ckp-res'],
+                isInspectable: false,
+                underPageBackgroundColor: webViewBackground(context),
+                pageZoom: contentZoom,
+              ),
+              onWebViewCreated: (web) {
+                _web = web;
+                WebViewPointerRelay.register(web, context, contentZoom);
+              },
+              onLoadStop: (web, _) {
+                if (mounted) setState(() => _loaded = true);
+                _push();
+              },
+              onLoadResourceWithCustomScheme: _serveLocal,
+              // Link clicado abre no browser do SO — o preview não navega pra fora.
+              shouldOverrideUrlLoading: (web, action) async {
+                final url = action.request.url;
+                if (url == null ||
+                    url.scheme == 'about' ||
+                    url.scheme == 'data') {
+                  return NavigationActionPolicy.ALLOW;
+                }
+                if (url.scheme == 'http' || url.scheme == 'https') {
+                  await launcher.launchUrl(url);
+                }
+                return NavigationActionPolicy.CANCEL;
+              },
             ),
-            onWebViewCreated: (web) {
-              _web = web;
-              WebViewPointerRelay.register(web, context, contentZoom);
-            },
-            onLoadStop: (web, _) {
-              if (mounted) setState(() => _loaded = true);
-              _push();
-            },
-            onLoadResourceWithCustomScheme: _serveLocal,
-            // Link clicado abre no browser do SO — o preview não navega pra fora.
-            shouldOverrideUrlLoading: (web, action) async {
-              final url = action.request.url;
-              if (url == null ||
-                  url.scheme == 'about' ||
-                  url.scheme == 'data') {
-                return NavigationActionPolicy.ALLOW;
-              }
-              if (url.scheme == 'http' || url.scheme == 'https') {
-                await launcher.launchUrl(url);
-              }
-              return NavigationActionPolicy.CANCEL;
-            },
           ),
         ),
       ),
