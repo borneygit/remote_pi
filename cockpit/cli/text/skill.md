@@ -534,9 +534,6 @@ Rules that matter:
   notes it summarizes.
 - Images: put files under `_assets/` inside the notebook and reference them
   as `![](_assets/name.png)` — the app draws them inline.
-- Diagrams: a ```mermaid fence (flowchart, sequence, class, state, gantt…)
-  renders as a diagram in the app's markdown preview, in notes and in any
-  `.md` file. Prefer it over ASCII art when explaining a flow.
 
 ## Telemetry (the error store) — query it instead of reading terminals
 

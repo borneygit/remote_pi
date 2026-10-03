@@ -59,9 +59,6 @@ class _WebMarkdownPreviewState extends State<WebMarkdownPreview> {
       rootBundle.loadString('$base/markdown-it.min.js'),
       rootBundle.loadString('$base/purify.min.js'),
       rootBundle.loadString('$base/morphdom-umd.min.js'),
-      // Mermaid 11 (IIFE, ~2.7 MB): diagramas em blocos ```mermaid. Sem eval
-      // nem import dinâmico, então cabe na CSP de nonce da página.
-      rootBundle.loadString('$base/mermaid.min.js'),
       rootBundle.loadString('$base/preview.js'),
     ]);
     final nonce = base64Url.encode(
@@ -81,8 +78,7 @@ class _WebMarkdownPreviewState extends State<WebMarkdownPreview> {
         .replaceFirst('__JS_MARKDOWN_IT__;', inline(results[2]))
         .replaceFirst('__JS_PURIFY__;', inline(results[3]))
         .replaceFirst('__JS_MORPHDOM__;', inline(results[4]))
-        .replaceFirst('__JS_MERMAID__;', inline(results[5]))
-        .replaceFirst('__JS_PREVIEW__;', inline(results[6]));
+        .replaceFirst('__JS_PREVIEW__;', inline(results[5]));
     return _cachedPage = page;
   }
 
