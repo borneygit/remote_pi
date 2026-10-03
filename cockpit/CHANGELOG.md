@@ -24,6 +24,41 @@ As versões seguem o `version:` do `pubspec.yaml` (SSOT). O campo `notes` do
     linhas não-vazias — o começo da seção deve fazer sentido sozinho.
 -->
 
+## [2.1.9] - 2026-10-03
+
+**Windows: markdown preview and `.panel` work again, and no longer crash the
+app.** Also fixes the file tree missing files created at the workspace root
+while the window was in the background or during a build.
+
+### Fixed
+
+- **Windows webviews crashed the app** when opening a markdown preview or a
+  `.panel`: one crash came from the pointer-relay script (now injected only on
+  macOS, where it is needed), the other from the Impeller renderer composing
+  the WebView2 texture (disabled on Windows).
+- **Windows markdown preview was blank**: the composed page exceeded the 2 MB
+  limit of WebView2 because of the bundled Mermaid library. Mermaid diagrams
+  were removed (the feature was unused); the page is ~177 KB now.
+- **Windows `.panel` loaded no resources**: `/__cockpit__/…` libraries, local
+  assets and the page itself now go through a shared WebView environment with
+  the custom schemes registered. `exec` runs in the default terminal profile
+  (PowerShell, cmd, WSL or login shell) instead of always `cmd /c`.
+- **Windows paths**: `.panel` folder, `exec` working directory and tab titles
+  no longer break on backslashes.
+- **Markdown preview no longer flashes black** on load: theme variables are
+  inlined before the first paint.
+- **File tree missed new files at the root**: the disk watcher was off while
+  the window had no focus and did not re-read on return; a long burst of
+  create/delete events (builds, `pub get`, agents writing to `.dart_tool/`)
+  kept postponing the refresh forever; a watcher restart re-armed without
+  re-reading. The tree now re-reads on focus and on watcher restart, and the
+  refresh fires at least every 2 s during a burst.
+
+### Changed
+
+- Agent-activity scans are throttled, and new terminal tabs open directly
+  without an intermediate empty tab.
+
 ## [2.1.8] - 2026-10-01
 
 **Faster terminals and window actions on Windows.** Process scans behind the
