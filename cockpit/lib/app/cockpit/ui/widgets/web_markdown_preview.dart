@@ -40,6 +40,16 @@ class WebMarkdownPreview extends StatefulWidget {
 class _WebMarkdownPreviewState extends State<WebMarkdownPreview> {
   InAppWebViewController? _web;
   bool _loaded = false;
+
+  /// Esqueleto composto (ver [_composePage]), ainda com o placeholder do tema.
+  String? _page;
+
+  /// A página que o webview carrega: [_page] com as variáveis `--ckp-*` do
+  /// tema **inlined** no `:root`. Sem isso o primeiro paint usava o fallback
+  /// escuro do CSS (`#1e1e1e`) até o `setTheme` do `onLoadStop` chegar — a
+  /// "tela preta" no começo do carregamento, gritante no tema claro. Montada
+  /// uma vez (o `initialData` só vale na criação da view); troca de tema
+  /// depois disso segue por JS.
   String? _html;
 
   /// Último tema injetado na página, pra não reinjetar igual a cada rebuild.
@@ -86,9 +96,13 @@ class _WebMarkdownPreviewState extends State<WebMarkdownPreview> {
   void initState() {
     super.initState();
     _composePage().then((page) {
-      if (mounted) setState(() => _html = page);
+      if (mounted) setState(() => _page = page);
     });
   }
+
+  /// `--ckp-bg: #...; --ckp-text: #...;` pro `:root` do esqueleto.
+  static String _themeCss(Map<String, String> vars) =>
+      vars.entries.map((e) => '${e.key}: ${e.value};').join(' ');
 
   @override
   void didUpdateWidget(WebMarkdownPreview old) {
@@ -167,7 +181,7 @@ class _WebMarkdownPreviewState extends State<WebMarkdownPreview> {
     return CustomSchemeResponse(
       data: bytes,
       contentType: _mimeOf(canonical),
-      contentEncoding: 'utf-8',
+      contentEncoding: webViewTextEncoding,
     );
   }
 
@@ -187,45 +201,54 @@ class _WebMarkdownPreviewState extends State<WebMarkdownPreview> {
 
   @override
   Widget build(BuildContext context) {
-    final html = _html;
-    if (html == null) {
+    final page = _page;
+    if (page == null) {
       return ColoredBox(color: context.colors.panel);
     }
+    final html = _html ??= page.replaceFirst(
+      '__THEME__',
+      _themeCss(_themeVars(context)),
+    );
     // Fora do zoom do app (platform view recebe mouse direto do sistema): sem
     // isso a seleção de texto cai deslocada. Ver [UnzoomedNativeView].
     return WebViewCover(
       loaded: _loaded,
-      child: UnzoomedNativeView(
-        builder: (context, contentZoom) => InAppWebView(
-          initialData: InAppWebViewInitialData(data: html),
-          initialUserScripts: kWebViewUserScripts,
-          initialSettings: InAppWebViewSettings(
-            javaScriptEnabled: true,
-            resourceCustomSchemes: ['ckp-res'],
-            isInspectable: false,
-            underPageBackgroundColor: webViewBackground(context),
-            pageZoom: contentZoom,
+      child: WebViewEnvironmentGate(
+        builder: (context, environment) => UnzoomedNativeView(
+          builder: (context, contentZoom) => InAppWebView(
+            webViewEnvironment: environment,
+            initialData: InAppWebViewInitialData(data: html),
+            initialUserScripts: kWebViewUserScripts,
+            initialSettings: InAppWebViewSettings(
+              javaScriptEnabled: true,
+              resourceCustomSchemes: ['ckp-res'],
+              isInspectable: false,
+              underPageBackgroundColor: webViewBackground(context),
+              pageZoom: contentZoom,
+            ),
+            onWebViewCreated: (web) {
+              _web = web;
+              WebViewPointerRelay.register(web, context, contentZoom);
+            },
+            onLoadStop: (web, _) {
+              if (mounted) setState(() => _loaded = true);
+              _push();
+            },
+            onLoadResourceWithCustomScheme: _serveLocal,
+            // Link clicado abre no browser do SO — o preview não navega pra fora.
+            shouldOverrideUrlLoading: (web, action) async {
+              final url = action.request.url;
+              if (url == null ||
+                  url.scheme == 'about' ||
+                  url.scheme == 'data') {
+                return NavigationActionPolicy.ALLOW;
+              }
+              if (url.scheme == 'http' || url.scheme == 'https') {
+                await launcher.launchUrl(url);
+              }
+              return NavigationActionPolicy.CANCEL;
+            },
           ),
-          onWebViewCreated: (web) {
-            _web = web;
-            WebViewPointerRelay.register(web, context, contentZoom);
-          },
-          onLoadStop: (web, _) {
-            if (mounted) setState(() => _loaded = true);
-            _push();
-          },
-          onLoadResourceWithCustomScheme: _serveLocal,
-          // Link clicado abre no browser do SO — o preview não navega pra fora.
-          shouldOverrideUrlLoading: (web, action) async {
-            final url = action.request.url;
-            if (url == null || url.scheme == 'about' || url.scheme == 'data') {
-              return NavigationActionPolicy.ALLOW;
-            }
-            if (url.scheme == 'http' || url.scheme == 'https') {
-              await launcher.launchUrl(url);
-            }
-            return NavigationActionPolicy.CANCEL;
-          },
         ),
       ),
     );
@@ -292,35 +315,40 @@ class _WebHtmlPreviewState extends State<WebHtmlPreview> {
     // Mesmo motivo do preview de markdown: platform view fora do zoom do app.
     return WebViewCover(
       loaded: _loaded,
-      child: UnzoomedNativeView(
-        builder: (context, contentZoom) => InAppWebView(
-          key: ValueKey('html:${widget.path}'),
-          initialUrlRequest: URLRequest(url: WebUri.uri(Uri.file(widget.path))),
-          // User script roda mesmo com JS da página desligado (é do host).
-          initialUserScripts: kWebViewUserScripts,
-          onWebViewCreated: (c) {
-            _controller = c;
-            WebViewPointerRelay.register(c, context, contentZoom);
-            if (_pending) {
-              _pending = false;
-              unawaited(c.reload());
-            }
-          },
-          onLoadStop: (_, _) {
-            if (mounted) setState(() => _loaded = true);
-          },
-          initialSettings: InAppWebViewSettings(
-            // JS ligado: o `javaScriptEnabled: false` do WebKit desliga TAMBÉM
-            // os user scripts do host (sem rubber-band, repasse de hover), e
-            // a página que o agente escreve costuma precisar de JS mesmo.
-            javaScriptEnabled: true,
-            isInspectable: false,
-            underPageBackgroundColor: webViewBackground(context),
-            pageZoom: contentZoom,
-            // Leitura restrita à raiz do workspace (loadFileURL:allowingReadAccessTo:).
-            allowingReadAccessTo: widget.workspaceRoot.isEmpty
-                ? null
-                : WebUri.uri(Uri.directory(widget.workspaceRoot)),
+      child: WebViewEnvironmentGate(
+        builder: (context, environment) => UnzoomedNativeView(
+          builder: (context, contentZoom) => InAppWebView(
+            key: ValueKey('html:${widget.path}'),
+            webViewEnvironment: environment,
+            initialUrlRequest: URLRequest(
+              url: WebUri.uri(Uri.file(widget.path)),
+            ),
+            // User script roda mesmo com JS da página desligado (é do host).
+            initialUserScripts: kWebViewUserScripts,
+            onWebViewCreated: (c) {
+              _controller = c;
+              WebViewPointerRelay.register(c, context, contentZoom);
+              if (_pending) {
+                _pending = false;
+                unawaited(c.reload());
+              }
+            },
+            onLoadStop: (_, _) {
+              if (mounted) setState(() => _loaded = true);
+            },
+            initialSettings: InAppWebViewSettings(
+              // JS ligado: o `javaScriptEnabled: false` do WebKit desliga TAMBÉM
+              // os user scripts do host (sem rubber-band, repasse de hover), e
+              // a página que o agente escreve costuma precisar de JS mesmo.
+              javaScriptEnabled: true,
+              isInspectable: false,
+              underPageBackgroundColor: webViewBackground(context),
+              pageZoom: contentZoom,
+              // Leitura restrita à raiz do workspace (loadFileURL:allowingReadAccessTo:).
+              allowingReadAccessTo: widget.workspaceRoot.isEmpty
+                  ? null
+                  : WebUri.uri(Uri.directory(widget.workspaceRoot)),
+            ),
           ),
         ),
       ),

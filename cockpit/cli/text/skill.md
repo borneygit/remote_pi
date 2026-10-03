@@ -55,8 +55,11 @@ Cockpit tabs (it is not on the global PATH).
   resolved against the tab cwd (relative, `~` and absolute all work). Any type
   opens as text — including extensionless ones (`.zprofile`, `Makefile`).
 - `cockpit exec [--cwd <dir>] [--timeout <s>] [--json] [--] <command...>` —
-  run a shell line through the app (login shell, so your PATH applies) and
-  print its output; the exit code is the command's. `--json` prints
+  run a shell line through the app and print its output; the exit code is the
+  command's. The shell is the app's **default terminal profile** (Settings →
+  Terminal): the login shell on macOS/Linux (so your PATH applies), and on
+  Windows whatever the `+` opens — PowerShell, cmd or a WSL distro — so write
+  the line in that shell's syntax. `--json` prints
   `{ok, code, stdout, stderr, timedOut}` on one line. This is what `.panel`
   buttons use under the hood; from a terminal you already have a shell, so
   prefer it only when you want the app's environment (`cockpit` on PATH,

@@ -6025,6 +6025,7 @@ class CockpitViewModel extends ChangeNotifier implements DocumentHost {
     line,
     cwd: cwd,
     environment: cliEnvironment(tabId: sessionId),
+    profile: defaultTerminalProfile,
   );
 
   Map<String, String> _cliPathEnv() {
