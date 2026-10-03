@@ -217,7 +217,7 @@ class CockpitViewModel extends ChangeNotifier implements DocumentHost {
     notifications
       ..focusedTabId = (() => _focusedAgentId)
       ..workspaceName = ((projectId) => _projectById(projectId)?.name ?? '');
-    notifications.addListener(notifyListeners);
+    notifications.addListener(_onNotificationsChanged);
     files.addListener(notifyListeners);
     remote.addListener(notifyListeners);
     _lastGitRevision = git.revision;
@@ -7000,6 +7000,10 @@ class CockpitViewModel extends ChangeNotifier implements DocumentHost {
     if (id != null && _trees.containsKey(id)) _scheduleSave(id);
   }
 
+  /// O badge de conclusão não altera o layout. Atualiza a rail sem reiniciar
+  /// o timer de serialização do workspace a cada notificação simultânea.
+  void _onNotificationsChanged() => super.notifyListeners();
+
   /// Re-sincroniza os workspaces remotos quando o [RemoteHostsController] muda
   /// por fora (aba "Remote hosts" das Configurações). Idempotente.
   void _onRemoteHostsChanged() {
@@ -7021,7 +7025,7 @@ class CockpitViewModel extends ChangeNotifier implements DocumentHost {
     git.removeListener(_onGitNotify);
     remote.removeListener(notifyListeners);
     files.removeListener(notifyListeners);
-    notifications.removeListener(notifyListeners);
+    notifications.removeListener(_onNotificationsChanged);
     realmCtrl.removeListener(notifyListeners);
     for (final t in _saveTimers.values) {
       t.cancel();
