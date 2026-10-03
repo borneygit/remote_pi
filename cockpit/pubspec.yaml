@@ -386,6 +386,11 @@ dependency_overrides:
   # clipboard, Ctrl+Space como chord, fixes de Kitty graphics. O C API do
   # Ghostty mudou (simbolos novos, ex.: ghostty_search_new): dylib nova.
   #
+  # Tag cockpit-pin-flterm-upstream-2026-10c (b41f118): + TerminalView.
+  # presentationActive (absorvido do PR #230, moregola): aba oculta fica
+  # montada mas o renderer nao recebe frames; ao reabrir, sync + layout
+  # completo. Dylib nativa identica a 2026-10 (patch so Dart).
+  #
   # ATENCAO CI: ao trocar esta ref muda o ghostty.version; o cache de native
   # asset (.dart_tool/hooks_runner, build/native_assets) precisa ser invalidado,
   # senao a dylib velha crasha o processo (exit -10) ao carregar os bindings novos.
@@ -395,10 +400,10 @@ dependency_overrides:
   flterm:
     git:
       url: https://github.com/jacobaraujo7/libghostty.git
-      ref: cockpit-pin-flterm-upstream-2026-10
+      ref: cockpit-pin-flterm-upstream-2026-10c
       path: packages/flterm
   libghostty:
     git:
       url: https://github.com/jacobaraujo7/libghostty.git
-      ref: cockpit-pin-flterm-upstream-2026-10
+      ref: cockpit-pin-flterm-upstream-2026-10c
       path: packages/libghostty

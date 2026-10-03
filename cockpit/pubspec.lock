@@ -432,8 +432,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/flterm"
-      ref: cockpit-pin-flterm-upstream-2026-10
-      resolved-ref: "735e10d10c1e37ef8977800517441433adb80b6c"
+      ref: cockpit-pin-flterm-upstream-2026-10c
+      resolved-ref: b41f11821467a5c6c9830845ef3034b6281b880e
       url: "https://github.com/jacobaraujo7/libghostty.git"
     source: git
     version: "0.0.5"
@@ -837,8 +837,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/libghostty"
-      ref: cockpit-pin-flterm-upstream-2026-10
-      resolved-ref: "735e10d10c1e37ef8977800517441433adb80b6c"
+      ref: cockpit-pin-flterm-upstream-2026-10c
+      resolved-ref: b41f11821467a5c6c9830845ef3034b6281b880e
       url: "https://github.com/jacobaraujo7/libghostty.git"
     source: git
     version: "0.0.12"
