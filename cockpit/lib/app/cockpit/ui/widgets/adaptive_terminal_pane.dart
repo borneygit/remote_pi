@@ -6,12 +6,14 @@ import 'package:cockpit/app/core/terminal/terminal_zoom.dart';
 import 'package:cockpit/app/core/terminal/xterm/xterm.dart' as xterm;
 import 'package:cockpit/app/core/ui/settings_controller.dart';
 import 'package:flterm/flterm.dart' as ghost;
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:url_launcher/url_launcher.dart';
 
+import 'link_context_menu.dart';
 import 'terminal_pane.dart';
 
 /// Renderiza o controller com a view nativa do motor que o criou.
@@ -143,7 +145,23 @@ class _GhosttyPane extends StatelessWidget {
       scrollPhysics: const ClampingScrollPhysics(),
       shortcuts: shortcuts,
       theme: ghosttyTheme,
-      linkSettings: ghost.LinkSettings(onActivate: (link) => _openLink(link)),
+      linkSettings: ghost.LinkSettings(
+        // No modifier: links underline on plain hover; a plain click shows the
+        // link menu ("pill") at the pointer, while ⌘/Ctrl-click opens directly.
+        // Right-click opens the context menu. flterm distinguishes click from
+        // drag and leaves clicks to mouse-tracking apps.
+        modifier: ghost.ActivationModifier.none,
+        onActivateAt: (link, position) {
+          if (_primaryModifierHeld) {
+            _openLink(link);
+          } else {
+            _showLinkMenu(context, link, position);
+          }
+        },
+        onSecondaryActivate: (link, position) {
+          _showLinkMenu(context, link, position);
+        },
+      ),
     );
 
     final view = TerminalUnzoomBox(scale: uiScale, child: terminalView);
@@ -175,16 +193,37 @@ class _GhosttyPane extends StatelessWidget {
     );
   }
 
+  bool get _primaryModifierHeld =>
+      defaultTargetPlatform == TargetPlatform.macOS
+      ? HardwareKeyboard.instance.isMetaPressed
+      : HardwareKeyboard.instance.isControlPressed;
+
   void _openLink(ghost.ActivatedLink link) {
     final file = link.file;
-    if (file != null && onOpenFile != null) {
-      onOpenFile!(file.path, line: file.line);
-      return;
-    }
-    final uri = link.uri;
-    if (uri != null) {
-      launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
+    openTerminalLink(
+      filePath: file?.path,
+      fileLine: file?.line,
+      resolvedFilePath: file?.resolvedPath,
+      uri: file == null ? link.uri : null,
+      onOpenFile: onOpenFile,
+    );
+  }
+
+  void _showLinkMenu(
+    BuildContext context,
+    ghost.ActivatedLink link,
+    Offset globalPosition,
+  ) {
+    final file = link.file;
+    showTerminalLinkMenu(
+      context,
+      globalPosition,
+      filePath: file?.path,
+      fileLine: file?.line,
+      resolvedFilePath: file?.resolvedPath,
+      uri: file == null ? link.uri : null,
+      onOpenFile: onOpenFile,
+    );
   }
 }
 
