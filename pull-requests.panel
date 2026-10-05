@@ -15,6 +15,7 @@ cwd: .
   <script src="/__cockpit__/marked.js"></script>
   <style>
     .pr { display: grid; grid-template-columns: 56px 1fr auto; gap: 12px; align-items: center; cursor: pointer; }
+    .copy { padding: 2px 8px; font-size: 12px; }
     .pr:hover { border-color: var(--ckp-accent); }
     .num { color: var(--ckp-text-muted); font-variant-numeric: tabular-nums; }
     .body { max-width: 80ch; }
@@ -49,7 +50,10 @@ cwd: .
             <div class="truncate"><b>{{ pr.title }}</b></div>
             <div class="muted">{{ pr.author.login }} · <code>{{ pr.headRefName }}</code> · updated {{ ago(pr.updatedAt) }}</div>
           </div>
-          <span class="badge" :class="pr.isDraft ? '' : 'ok'">{{ pr.isDraft ? 'draft' : 'open' }}</span>
+          <div class="row">
+            <span class="badge" :class="pr.isDraft ? '' : 'ok'">{{ pr.isDraft ? 'draft' : 'open' }}</span>
+            <button class="copy" :title="'Copy link to #' + pr.number" @click.stop="copy(pr)">{{ copied === pr.number ? 'Copied' : 'Copy' }}</button>
+          </div>
         </div>
       </div>
       <p v-if="!loading && !prs.length && !error" class="muted">No open pull requests.</p>
@@ -61,6 +65,7 @@ cwd: .
         <button @click="cockpit.route.go('/')">← Back</button>
         <span class="muted grow">#{{ detail.number }} · {{ detail.author.login }} · <code>{{ detail.headRefName }}</code> → <code>{{ detail.baseRefName }}</code></span>
         <span class="badge" :class="detail.isDraft ? '' : 'ok'">{{ detail.isDraft ? 'draft' : detail.reviewDecision || 'open' }}</span>
+        <button @click="copy(detail)">{{ copied === detail.number ? 'Copied' : 'Copy link' }}</button>
         <a class="btn" :href="detail.url">Open on GitHub</a>
       </div>
       <h1>{{ detail.title }}</h1>
@@ -92,8 +97,25 @@ cwd: .
     function App() {
       let chart = null;
       return {
-        prs: [], detail: null, loading: false, status: '', error: '',
+        prs: [], detail: null, loading: false, status: '', error: '', copied: null,
         get drafts() { return this.prs.filter(p => p.isDraft).length; },
+
+        // Copia o link do PR. `navigator.clipboard` exige contexto seguro, que
+        // o scheme ckp-panel pode não ter; cai no execCommand via textarea.
+        async copy(pr) {
+          const text = pr.url;
+          let ok = false;
+          try { await navigator.clipboard.writeText(text); ok = true; } catch (_) {}
+          if (!ok) {
+            const ta = document.createElement('textarea');
+            ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+            document.body.appendChild(ta); ta.select();
+            try { ok = document.execCommand('copy'); } catch (_) {}
+            ta.remove();
+          }
+          if (ok) { this.copied = pr.number; setTimeout(() => { if (this.copied === pr.number) this.copied = null; }, 1500); }
+          else this.error = 'Could not copy to clipboard';
+        },
 
         ago(iso) {
           const s = (Date.now() - new Date(iso)) / 1000;
