@@ -24,6 +24,40 @@ As versões seguem o `version:` do `pubspec.yaml` (SSOT). O campo `notes` do
     linhas não-vazias — o começo da seção deve fazer sentido sozinho.
 -->
 
+## [2.1.12] - 2026-10-06
+
+**Comment toggling in the editor, a link menu in the terminal, ⌘T for a new
+terminal, and an opt-in to close a tab when its shell exits.**
+
+### Added
+
+- **Comment and uncomment** in the code editor, VS Code style: `⌘/` toggles,
+  `⌘K ⌘C` comments, `⌘K ⌘U` uncomments (`Ctrl` on Windows and Linux). The
+  token follows the file type (`//`, `#`, `--` for SQL in `.dbq` and HTML
+  comments for Markdown and HTML); unknown languages are left untouched.
+- **Terminal link menu**: right-click a path or URL in a terminal to Open,
+  Reveal in Finder/Explorer or Copy. ⌘-click still opens directly; a text file
+  opens in Cockpit's viewer, a binary (dmg, image, PDF) in the OS default app,
+  a URL in the browser. Works in both terminal engines (#234, cfbraun).
+- **⌘T / Ctrl+T** opens a new terminal tab in the active workspace, from
+  File → New Terminal (#233, cfbraun).
+- **Close tab when the shell exits** (Settings → Terminal → Behavior, off by
+  default): `exit` or Ctrl-D closes the tab instead of leaving a dead
+  terminal (#235, cfbraun).
+
+### Fixed
+
+- **Markdown preview tables** had centered header cells; cells are now
+  left-aligned by default, and explicit column alignment still applies.
+
+### Changed
+
+- Terminal engine (flterm) refreshed to tag `cockpit-pin-flterm-upstream-2026-10d`
+  with the link hooks above.
+- README explains how to inspect the installed app's own telemetry
+  (Developer mode → Telemetry → Cockpit) and what it costs in disk, memory
+  and CPU.
+
 ## [2.1.11] - 2026-10-03
 
 **Terminals in hidden tabs no longer cost frames, and the Windows app no
