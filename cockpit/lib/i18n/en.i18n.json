@@ -993,7 +993,10 @@
         "engineDesc": "Used by new terminal tabs and task output buffers. Open tabs keep their current engine.",
         "shellTitle": "Shell",
         "shellDesc": "Which shell new terminal tabs open. The arrow next to + still opens any other one, just for that tab.",
-        "noWslMessage": "No WSL distros found. Install one (wsl.exe --install) and restart Cockpit to see it listed here."
+        "noWslMessage": "No WSL distros found. Install one (wsl.exe --install) and restart Cockpit to see it listed here.",
+        "sectionBehavior": "Behavior",
+        "closeOnExitTitle": "Close tab when the shell exits",
+        "closeOnExitDesc": "When a shell ends on its own (exit, Ctrl-D), close its tab instead of leaving a dead terminal."
       },
       "appearance": {
         "sectionTheme": "Theme",

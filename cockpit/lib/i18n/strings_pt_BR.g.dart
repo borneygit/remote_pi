@@ -1703,6 +1703,9 @@ class _Translations$settings$page$terminal$pt_BR extends Translations$settings$p
 	@override String get shellTitle => 'Shell';
 	@override String get shellDesc => 'Qual shell novas abas de terminal abrem. A seta ao lado do + ainda abre qualquer outro, só para aquela aba.';
 	@override String get noWslMessage => 'Nenhuma distro WSL encontrada. Instale uma (wsl.exe --install) e reinicie o Cockpit para vê-la listada aqui.';
+	@override String get sectionBehavior => 'Comportamento';
+	@override String get closeOnExitTitle => 'Fechar a aba quando o shell encerrar';
+	@override String get closeOnExitDesc => 'Quando um shell termina sozinho (exit, Ctrl-D), fecha a aba em vez de deixar um terminal morto.';
 }
 
 // Path: settings.page.appearance
@@ -2720,6 +2723,9 @@ extension on TranslationsPtBr {
 			'settings.page.terminal.shellTitle' => 'Shell',
 			'settings.page.terminal.shellDesc' => 'Qual shell novas abas de terminal abrem. A seta ao lado do + ainda abre qualquer outro, só para aquela aba.',
 			'settings.page.terminal.noWslMessage' => 'Nenhuma distro WSL encontrada. Instale uma (wsl.exe --install) e reinicie o Cockpit para vê-la listada aqui.',
+			'settings.page.terminal.sectionBehavior' => 'Comportamento',
+			'settings.page.terminal.closeOnExitTitle' => 'Fechar a aba quando o shell encerrar',
+			'settings.page.terminal.closeOnExitDesc' => 'Quando um shell termina sozinho (exit, Ctrl-D), fecha a aba em vez de deixar um terminal morto.',
 			'settings.page.appearance.sectionTheme' => 'Tema',
 			'settings.page.appearance.themeTitle' => 'Tema',
 			'settings.page.appearance.themeDesc' => 'Cores do app, realce de código e paleta do terminal.',

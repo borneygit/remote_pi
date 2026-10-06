@@ -993,7 +993,10 @@
         "engineDesc": "Usado por nuevas pestañas de terminal y buffers de salida de tasks. Las pestañas abiertas mantienen su motor actual.",
         "shellTitle": "Shell",
         "shellDesc": "Qué shell abren las nuevas pestañas de terminal. La flecha junto al + sigue abriendo cualquier otro, solo para esa pestaña.",
-        "noWslMessage": "No se encontraron distros de WSL. Instala una (wsl.exe --install) y reinicia Cockpit para verla listada aquí."
+        "noWslMessage": "No se encontraron distros de WSL. Instala una (wsl.exe --install) y reinicia Cockpit para verla listada aquí.",
+        "sectionBehavior": "Comportamiento",
+        "closeOnExitTitle": "Cerrar la pestaña cuando el shell termine",
+        "closeOnExitDesc": "Cuando un shell termina por sí solo (exit, Ctrl-D), cierra su pestaña en lugar de dejar un terminal muerto."
       },
       "appearance": {
         "sectionTheme": "Tema",

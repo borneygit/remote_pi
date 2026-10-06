@@ -1703,6 +1703,9 @@ class _Translations$settings$page$terminal$es extends Translations$settings$page
 	@override String get shellTitle => 'Shell';
 	@override String get shellDesc => 'Qué shell abren las nuevas pestañas de terminal. La flecha junto al + sigue abriendo cualquier otro, solo para esa pestaña.';
 	@override String get noWslMessage => 'No se encontraron distros de WSL. Instala una (wsl.exe --install) y reinicia Cockpit para verla listada aquí.';
+	@override String get sectionBehavior => 'Comportamiento';
+	@override String get closeOnExitTitle => 'Cerrar la pestaña cuando el shell termine';
+	@override String get closeOnExitDesc => 'Cuando un shell termina por sí solo (exit, Ctrl-D), cierra su pestaña en lugar de dejar un terminal muerto.';
 }
 
 // Path: settings.page.appearance
@@ -2720,6 +2723,9 @@ extension on TranslationsEs {
 			'settings.page.terminal.shellTitle' => 'Shell',
 			'settings.page.terminal.shellDesc' => 'Qué shell abren las nuevas pestañas de terminal. La flecha junto al + sigue abriendo cualquier otro, solo para esa pestaña.',
 			'settings.page.terminal.noWslMessage' => 'No se encontraron distros de WSL. Instala una (wsl.exe --install) y reinicia Cockpit para verla listada aquí.',
+			'settings.page.terminal.sectionBehavior' => 'Comportamiento',
+			'settings.page.terminal.closeOnExitTitle' => 'Cerrar la pestaña cuando el shell termine',
+			'settings.page.terminal.closeOnExitDesc' => 'Cuando un shell termina por sí solo (exit, Ctrl-D), cierra su pestaña en lugar de dejar un terminal muerto.',
 			'settings.page.appearance.sectionTheme' => 'Tema',
 			'settings.page.appearance.themeTitle' => 'Tema',
 			'settings.page.appearance.themeDesc' => 'Colores de la app, resaltado de código y paleta del terminal.',

@@ -1139,14 +1139,12 @@ class _TerminalPanel extends StatelessWidget {
                 ),
               ),
               _Section(
-                label: 'Behavior',
+                label: tr.sectionBehavior,
                 child: _Card(
                   children: [
                     _Row(
-                      title: 'Close tab when the shell exits',
-                      description:
-                          'When a shell ends on its own (exit, Ctrl-D), close '
-                          'its tab instead of leaving a dead terminal.',
+                      title: tr.closeOnExitTitle,
+                      description: tr.closeOnExitDesc,
                       trailing: Switch(
                         value: controller.settings.closeTabOnShellExit,
                         onChanged: controller.setCloseTabOnShellExit,

@@ -3512,6 +3512,15 @@ class Translations$settings$page$terminal$en {
 
 	/// en: 'No WSL distros found. Install one (wsl.exe --install) and restart Cockpit to see it listed here.'
 	String get noWslMessage => 'No WSL distros found. Install one (wsl.exe --install) and restart Cockpit to see it listed here.';
+
+	/// en: 'Behavior'
+	String get sectionBehavior => 'Behavior';
+
+	/// en: 'Close tab when the shell exits'
+	String get closeOnExitTitle => 'Close tab when the shell exits';
+
+	/// en: 'When a shell ends on its own (exit, Ctrl-D), close its tab instead of leaving a dead terminal.'
+	String get closeOnExitDesc => 'When a shell ends on its own (exit, Ctrl-D), close its tab instead of leaving a dead terminal.';
 }
 
 // Path: settings.page.appearance
@@ -4757,6 +4766,9 @@ extension on Translations {
 			'settings.page.terminal.shellTitle' => 'Shell',
 			'settings.page.terminal.shellDesc' => 'Which shell new terminal tabs open. The arrow next to + still opens any other one, just for that tab.',
 			'settings.page.terminal.noWslMessage' => 'No WSL distros found. Install one (wsl.exe --install) and restart Cockpit to see it listed here.',
+			'settings.page.terminal.sectionBehavior' => 'Behavior',
+			'settings.page.terminal.closeOnExitTitle' => 'Close tab when the shell exits',
+			'settings.page.terminal.closeOnExitDesc' => 'When a shell ends on its own (exit, Ctrl-D), close its tab instead of leaving a dead terminal.',
 			'settings.page.appearance.sectionTheme' => 'Theme',
 			'settings.page.appearance.themeTitle' => 'Theme',
 			'settings.page.appearance.themeDesc' => 'App colors, code highlighting and terminal palette.',
