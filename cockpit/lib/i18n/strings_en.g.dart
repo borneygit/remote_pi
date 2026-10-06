@@ -177,6 +177,7 @@ class Translations$cockpit$en {
 	late final Translations$cockpit$topbar$en topbar = Translations$cockpit$topbar$en.internal(_root);
 	late final Translations$cockpit$tasks$en tasks = Translations$cockpit$tasks$en.internal(_root);
 	late final Translations$cockpit$notifications$en notifications = Translations$cockpit$notifications$en.internal(_root);
+	late final Translations$cockpit$terminalLink$en terminalLink = Translations$cockpit$terminalLink$en.internal(_root);
 	late final Translations$cockpit$terminal$en terminal = Translations$cockpit$terminal$en.internal(_root);
 	late final Translations$cockpit$remoteHost$en remoteHost = Translations$cockpit$remoteHost$en.internal(_root);
 	late final Translations$cockpit$browserPane$en browserPane = Translations$cockpit$browserPane$en.internal(_root);
@@ -2152,6 +2153,36 @@ class Translations$cockpit$notifications$en {
 
 	/// en: 'Agent needs your input'
 	String get agentNeedsAction => 'Agent needs your input';
+}
+
+// Path: cockpit.terminalLink
+class Translations$cockpit$terminalLink$en {
+	Translations$cockpit$terminalLink$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Open'
+	String get open => 'Open';
+
+	/// en: 'Reveal in Finder'
+	String get revealFinder => 'Reveal in Finder';
+
+	/// en: 'Show in Explorer'
+	String get revealExplorer => 'Show in Explorer';
+
+	/// en: 'Open containing folder'
+	String get revealFolder => 'Open containing folder';
+
+	/// en: 'Copy path'
+	String get copyPath => 'Copy path';
+
+	/// en: 'Open link'
+	String get openLink => 'Open link';
+
+	/// en: 'Copy link'
+	String get copyLink => 'Copy link';
 }
 
 // Path: cockpit.terminal
@@ -4499,6 +4530,13 @@ extension on Translations {
 			'cockpit.notifications.agentFinished' => 'Agent finished',
 			'cockpit.notifications.open' => 'Open',
 			'cockpit.notifications.agentNeedsAction' => 'Agent needs your input',
+			'cockpit.terminalLink.open' => 'Open',
+			'cockpit.terminalLink.revealFinder' => 'Reveal in Finder',
+			'cockpit.terminalLink.revealExplorer' => 'Show in Explorer',
+			'cockpit.terminalLink.revealFolder' => 'Open containing folder',
+			'cockpit.terminalLink.copyPath' => 'Copy path',
+			'cockpit.terminalLink.openLink' => 'Open link',
+			'cockpit.terminalLink.copyLink' => 'Copy link',
 			'cockpit.terminal.cwdFallbackWarning' => ({required Object requested, required Object path}) => 'Warning: the folder "${requested}" does not exist. This terminal opened in "${path}".',
 			'cockpit.terminal.workspaceEnvTracked' => ({required Object keys}) => 'Notice: .env.cockpit is tracked by git (it came with the repository). Injected: ${keys}',
 			'cockpit.remoteHost.addHost' => 'Add remote host',
@@ -4946,6 +4984,8 @@ extension on Translations {
 			'theme.error.missingField' => ({required Object field}) => 'Missing required field "${field}".',
 			'theme.error.badColor' => ({required Object value, required Object field}) => '"${value}" at "${field}" is not a color. Use #RGB, #RRGGBB or #RRGGBBAA.',
 			'theme.error.unknownBase' => ({required Object value}) => 'Unknown base theme "${value}" in "extends".',
+			_ => null,
+		} ?? switch (path) {
 			'theme.error.noVariants' => 'The theme declares no variant. Add "dark", "light" or both under "variants".',
 			_ => null,
 		};

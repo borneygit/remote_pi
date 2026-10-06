@@ -400,10 +400,10 @@ dependency_overrides:
   flterm:
     git:
       url: https://github.com/jacobaraujo7/libghostty.git
-      ref: cockpit-pin-flterm-upstream-2026-10c
+      ref: cockpit-pin-flterm-upstream-2026-10d
       path: packages/flterm
   libghostty:
     git:
       url: https://github.com/jacobaraujo7/libghostty.git
-      ref: cockpit-pin-flterm-upstream-2026-10c
+      ref: cockpit-pin-flterm-upstream-2026-10d
       path: packages/libghostty

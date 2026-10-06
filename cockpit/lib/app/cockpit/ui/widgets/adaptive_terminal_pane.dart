@@ -6,8 +6,6 @@ import 'package:cockpit/app/core/terminal/terminal_zoom.dart';
 import 'package:cockpit/app/core/terminal/xterm/xterm.dart' as xterm;
 import 'package:cockpit/app/core/ui/settings_controller.dart';
 import 'package:flterm/flterm.dart' as ghost;
-import 'package:flutter/foundation.dart'
-    show TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_modular/flutter_modular.dart';
@@ -146,18 +144,11 @@ class _GhosttyPane extends StatelessWidget {
       shortcuts: shortcuts,
       theme: ghosttyTheme,
       linkSettings: ghost.LinkSettings(
-        // No modifier: links underline on plain hover; a plain click shows the
-        // link menu ("pill") at the pointer, while ⌘/Ctrl-click opens directly.
-        // Right-click opens the context menu. flterm distinguishes click from
-        // drag and leaves clicks to mouse-tracking apps.
-        modifier: ghost.ActivationModifier.none,
-        onActivateAt: (link, position) {
-          if (_primaryModifierHeld) {
-            _openLink(link);
-          } else {
-            _showLinkMenu(context, link, position);
-          }
-        },
+        // Hover e abertura seguem exigindo ⌘/Ctrl (default do flterm): num
+        // terminal cheio de caminhos, clique simples continua só posicionando o
+        // foco. ⌘-clique abre direto; botão direito num link abre o menu
+        // (Open / Reveal / Copy), checado antes do mouse tracking da TUI.
+        onActivateAt: (link, position) => _openLink(link),
         onSecondaryActivate: (link, position) {
           _showLinkMenu(context, link, position);
         },
@@ -192,11 +183,6 @@ class _GhosttyPane extends StatelessWidget {
       ),
     );
   }
-
-  bool get _primaryModifierHeld =>
-      defaultTargetPlatform == TargetPlatform.macOS
-      ? HardwareKeyboard.instance.isMetaPressed
-      : HardwareKeyboard.instance.isControlPressed;
 
   void _openLink(ghost.ActivatedLink link) {
     final file = link.file;

@@ -671,6 +671,15 @@
       "open": "Abrir",
       "agentNeedsAction": "El agente necesita tu acción"
     },
+    "terminalLink": {
+      "open": "Abrir",
+      "revealFinder": "Mostrar en Finder",
+      "revealExplorer": "Mostrar en el Explorador",
+      "revealFolder": "Abrir carpeta contenedora",
+      "copyPath": "Copiar ruta",
+      "openLink": "Abrir enlace",
+      "copyLink": "Copiar enlace"
+    },
     "terminal": {
       "cwdFallbackWarning": "Aviso: la carpeta \"${requested}\" no existe. Esta terminal se abrió en \"${path}\".",
       "workspaceEnvTracked": "Aviso: el .env.cockpit está rastreado por git (vino con el repositorio). Inyectado: ${keys}"

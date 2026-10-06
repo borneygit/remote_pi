@@ -129,6 +129,7 @@ class _Translations$cockpit$pt_BR extends Translations$cockpit$en {
 	@override late final _Translations$cockpit$topbar$pt_BR topbar = _Translations$cockpit$topbar$pt_BR._(_root);
 	@override late final _Translations$cockpit$tasks$pt_BR tasks = _Translations$cockpit$tasks$pt_BR._(_root);
 	@override late final _Translations$cockpit$notifications$pt_BR notifications = _Translations$cockpit$notifications$pt_BR._(_root);
+	@override late final _Translations$cockpit$terminalLink$pt_BR terminalLink = _Translations$cockpit$terminalLink$pt_BR._(_root);
 	@override late final _Translations$cockpit$terminal$pt_BR terminal = _Translations$cockpit$terminal$pt_BR._(_root);
 	@override late final _Translations$cockpit$remoteHost$pt_BR remoteHost = _Translations$cockpit$remoteHost$pt_BR._(_root);
 	@override late final _Translations$cockpit$browserPane$pt_BR browserPane = _Translations$cockpit$browserPane$pt_BR._(_root);
@@ -1038,6 +1039,22 @@ class _Translations$cockpit$notifications$pt_BR extends Translations$cockpit$not
 	@override String get agentFinished => 'Agente terminou';
 	@override String get open => 'Abrir';
 	@override String get agentNeedsAction => 'Agente precisa de você';
+}
+
+// Path: cockpit.terminalLink
+class _Translations$cockpit$terminalLink$pt_BR extends Translations$cockpit$terminalLink$en {
+	_Translations$cockpit$terminalLink$pt_BR._(TranslationsPtBr root) : this._root = root, super.internal(root);
+
+	final TranslationsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get open => 'Abrir';
+	@override String get revealFinder => 'Mostrar no Finder';
+	@override String get revealExplorer => 'Mostrar no Explorer';
+	@override String get revealFolder => 'Abrir pasta';
+	@override String get copyPath => 'Copiar caminho';
+	@override String get openLink => 'Abrir link';
+	@override String get copyLink => 'Copiar link';
 }
 
 // Path: cockpit.terminal
@@ -2456,6 +2473,13 @@ extension on TranslationsPtBr {
 			'cockpit.notifications.agentFinished' => 'Agente terminou',
 			'cockpit.notifications.open' => 'Abrir',
 			'cockpit.notifications.agentNeedsAction' => 'Agente precisa de você',
+			'cockpit.terminalLink.open' => 'Abrir',
+			'cockpit.terminalLink.revealFinder' => 'Mostrar no Finder',
+			'cockpit.terminalLink.revealExplorer' => 'Mostrar no Explorer',
+			'cockpit.terminalLink.revealFolder' => 'Abrir pasta',
+			'cockpit.terminalLink.copyPath' => 'Copiar caminho',
+			'cockpit.terminalLink.openLink' => 'Abrir link',
+			'cockpit.terminalLink.copyLink' => 'Copiar link',
 			'cockpit.terminal.cwdFallbackWarning' => ({required Object requested, required Object path}) => 'Aviso: a pasta "${requested}" não existe. Este terminal abriu em "${path}".',
 			'cockpit.terminal.workspaceEnvTracked' => ({required Object keys}) => 'Aviso: o .env.cockpit está rastreado pelo git (veio com o repositório). Injetado: ${keys}',
 			'cockpit.remoteHost.addHost' => 'Adicionar host remoto',
@@ -2903,6 +2927,8 @@ extension on TranslationsPtBr {
 			'theme.error.missingField' => ({required Object field}) => 'Falta o campo obrigatório "${field}".',
 			'theme.error.badColor' => ({required Object value, required Object field}) => '"${value}" em "${field}" não é uma cor. Use #RGB, #RRGGBB ou #RRGGBBAA.',
 			'theme.error.unknownBase' => ({required Object value}) => 'Tema base "${value}" desconhecido em "extends".',
+			_ => null,
+		} ?? switch (path) {
 			'theme.error.noVariants' => 'O tema não declara nenhum variant. Adicione "dark", "light" ou os dois em "variants".',
 			_ => null,
 		};

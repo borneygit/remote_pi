@@ -129,6 +129,7 @@ class _Translations$cockpit$es extends Translations$cockpit$en {
 	@override late final _Translations$cockpit$topbar$es topbar = _Translations$cockpit$topbar$es._(_root);
 	@override late final _Translations$cockpit$tasks$es tasks = _Translations$cockpit$tasks$es._(_root);
 	@override late final _Translations$cockpit$notifications$es notifications = _Translations$cockpit$notifications$es._(_root);
+	@override late final _Translations$cockpit$terminalLink$es terminalLink = _Translations$cockpit$terminalLink$es._(_root);
 	@override late final _Translations$cockpit$terminal$es terminal = _Translations$cockpit$terminal$es._(_root);
 	@override late final _Translations$cockpit$remoteHost$es remoteHost = _Translations$cockpit$remoteHost$es._(_root);
 	@override late final _Translations$cockpit$browserPane$es browserPane = _Translations$cockpit$browserPane$es._(_root);
@@ -1038,6 +1039,22 @@ class _Translations$cockpit$notifications$es extends Translations$cockpit$notifi
 	@override String get agentFinished => 'El agente terminó';
 	@override String get open => 'Abrir';
 	@override String get agentNeedsAction => 'El agente necesita tu acción';
+}
+
+// Path: cockpit.terminalLink
+class _Translations$cockpit$terminalLink$es extends Translations$cockpit$terminalLink$en {
+	_Translations$cockpit$terminalLink$es._(TranslationsEs root) : this._root = root, super.internal(root);
+
+	final TranslationsEs _root; // ignore: unused_field
+
+	// Translations
+	@override String get open => 'Abrir';
+	@override String get revealFinder => 'Mostrar en Finder';
+	@override String get revealExplorer => 'Mostrar en el Explorador';
+	@override String get revealFolder => 'Abrir carpeta contenedora';
+	@override String get copyPath => 'Copiar ruta';
+	@override String get openLink => 'Abrir enlace';
+	@override String get copyLink => 'Copiar enlace';
 }
 
 // Path: cockpit.terminal
@@ -2456,6 +2473,13 @@ extension on TranslationsEs {
 			'cockpit.notifications.agentFinished' => 'El agente terminó',
 			'cockpit.notifications.open' => 'Abrir',
 			'cockpit.notifications.agentNeedsAction' => 'El agente necesita tu acción',
+			'cockpit.terminalLink.open' => 'Abrir',
+			'cockpit.terminalLink.revealFinder' => 'Mostrar en Finder',
+			'cockpit.terminalLink.revealExplorer' => 'Mostrar en el Explorador',
+			'cockpit.terminalLink.revealFolder' => 'Abrir carpeta contenedora',
+			'cockpit.terminalLink.copyPath' => 'Copiar ruta',
+			'cockpit.terminalLink.openLink' => 'Abrir enlace',
+			'cockpit.terminalLink.copyLink' => 'Copiar enlace',
 			'cockpit.terminal.cwdFallbackWarning' => ({required Object requested, required Object path}) => 'Aviso: la carpeta "${requested}" no existe. Esta terminal se abrió en "${path}".',
 			'cockpit.terminal.workspaceEnvTracked' => ({required Object keys}) => 'Aviso: el .env.cockpit está rastreado por git (vino con el repositorio). Inyectado: ${keys}',
 			'cockpit.remoteHost.addHost' => 'Añadir host remoto',
@@ -2903,6 +2927,8 @@ extension on TranslationsEs {
 			'theme.error.missingField' => ({required Object field}) => 'Falta el campo obligatorio "${field}".',
 			'theme.error.badColor' => ({required Object value, required Object field}) => '"${value}" en "${field}" no es un color. Usa #RGB, #RRGGBB o #RRGGBBAA.',
 			'theme.error.unknownBase' => ({required Object value}) => 'Tema base "${value}" desconocido en "extends".',
+			_ => null,
+		} ?? switch (path) {
 			'theme.error.noVariants' => 'El tema no declara ningún variant. Añade "dark", "light" o ambos en "variants".',
 			_ => null,
 		};

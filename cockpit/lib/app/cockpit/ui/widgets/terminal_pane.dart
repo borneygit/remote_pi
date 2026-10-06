@@ -155,13 +155,13 @@ class _TerminalPaneState extends State<TerminalPane>
       _setHoverLink(null);
       return;
     }
-    // Underline links on plain hover (no modifier); ⌘/Ctrl is only needed to
-    // click-open.
-    final link = _linkDetector.linkAt(
-      widget.terminal,
-      r.getCellOffset(r.globalToLocal(global)),
-      detectFiles: widget.onOpenFile != null,
-    );
+    final link = _isCmd
+        ? _linkDetector.linkAt(
+            widget.terminal,
+            r.getCellOffset(r.globalToLocal(global)),
+            detectFiles: widget.onOpenFile != null,
+          )
+        : null;
     _setHoverLink(link);
   }
 
@@ -199,17 +199,18 @@ class _TerminalPaneState extends State<TerminalPane>
     }
   }
 
-  /// Right-click a detected link → shared context menu at the pointer.
-  void _showLinkMenuAt(Offset global) {
+  /// Botão direito num link detectado → menu compartilhado no ponteiro.
+  /// Devolve `false` quando não há link embaixo (o chamador segue o fluxo).
+  bool _showLinkMenuAt(Offset global) {
     final r = _render;
-    if (r == null) return;
+    if (r == null) return false;
     final cell = r.getCellOffset(r.globalToLocal(global));
     final link = _linkDetector.linkAt(
       widget.terminal,
       cell,
       detectFiles: widget.onOpenFile != null,
     );
-    if (link == null) return;
+    if (link == null) return false;
     if (link.kind == TerminalLinkKind.file) {
       showTerminalLinkMenu(
         context,
@@ -225,15 +226,17 @@ class _TerminalPaneState extends State<TerminalPane>
           : link.target;
       showTerminalLinkMenu(context, global, uri: Uri.tryParse(raw));
     }
+    return true;
   }
 
   void _onPointerDown(PointerDownEvent e) {
     // Toque não seleciona por arraste no desktop; só mouse/trackpad com botão.
     if (e.kind == PointerDeviceKind.touch) return;
-    // Right-click over a link → context menu (shared with the ghostty engine).
+    // Botão direito SOBRE um link → menu (compartilhado com o motor ghostty).
+    // Sem link embaixo, o evento segue o fluxo normal (menu do pane / TUI).
     if (e.kind == PointerDeviceKind.mouse &&
-        (e.buttons & kSecondaryButton) != 0) {
-      _showLinkMenuAt(e.position);
+        (e.buttons & kSecondaryButton) != 0 &&
+        _showLinkMenuAt(e.position)) {
       return;
     }
     if ((e.buttons & kPrimaryButton) == 0) return;
@@ -306,23 +309,18 @@ class _TerminalPaneState extends State<TerminalPane>
       return;
     }
     // Cmd+clique (sem arraste) sobre um link → arquivo abre no FileViewer, URL
-    // no navegador.
-    if (!_selecting && _hoverLink != null) {
-      if (_isCmd) {
-        final link = _hoverLink!;
-        if (link.kind == TerminalLinkKind.file) {
-          openTerminalLink(
-            filePath: link.target,
-            fileLine: link.line,
-            resolvedFilePath: link.target,
-            onOpenFile: widget.onOpenFile,
-          );
-        } else {
-          _openLink(link.target);
-        }
+    // no navegador. Clique simples não faz nada com o link (só foco/seleção).
+    if (!_selecting && _hoverLink != null && _isCmd) {
+      final link = _hoverLink!;
+      if (link.kind == TerminalLinkKind.file) {
+        openTerminalLink(
+          filePath: link.target,
+          fileLine: link.line,
+          resolvedFilePath: link.target,
+          onOpenFile: widget.onOpenFile,
+        );
       } else {
-        // Plain click → show the link menu ("pill") at the pointer.
-        _showLinkMenuAt(e.position);
+        _openLink(link.target);
       }
     }
     _finishSelecting();

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cockpit/app/core/ui/widgets/app_menu.dart';
 import 'package:cockpit/app/core/utils/platform_kind.dart';
 import 'package:flutter/services.dart';
+import 'package:cockpit/i18n/strings.g.dart';
 import 'package:flutter/widgets.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -21,6 +22,7 @@ Future<void> showTerminalLinkMenu(
   Uri? uri,
   void Function(String path, {int? line})? onOpenFile,
 }) async {
+  final tr = context.t.cockpit.terminalLink;
   final items = <AppMenuItem<VoidCallback>>[];
   if (filePath != null) {
     final target = _expandHome(resolvedFilePath ?? filePath);
@@ -32,34 +34,38 @@ Future<void> showTerminalLinkMenu(
           resolvedFilePath: resolvedFilePath,
           onOpenFile: onOpenFile,
         ),
-        label: 'Open',
+        label: tr.open,
       ),
     );
     if (!isMobilePlatform) {
       items.add(
         AppMenuItem(
           value: () => _revealInFileManager(target),
-          label: _revealLabel,
+          label: Platform.isMacOS
+              ? tr.revealFinder
+              : Platform.isWindows
+              ? tr.revealExplorer
+              : tr.revealFolder,
         ),
       );
     }
     items.add(
       AppMenuItem(
         value: () => Clipboard.setData(ClipboardData(text: target)),
-        label: 'Copy Path',
+        label: tr.copyPath,
       ),
     );
   } else if (uri != null) {
     items.add(
       AppMenuItem(
         value: () => openTerminalLink(uri: uri),
-        label: 'Open Link',
+        label: tr.openLink,
       ),
     );
     items.add(
       AppMenuItem(
         value: () => Clipboard.setData(ClipboardData(text: uri.toString())),
-        label: 'Copy Link',
+        label: tr.copyLink,
       ),
     );
   }
@@ -133,12 +139,6 @@ void _osOpen(String path) {
     Process.run('xdg-open', [path]);
   }
 }
-
-String get _revealLabel => Platform.isMacOS
-    ? 'Reveal in Finder'
-    : Platform.isWindows
-    ? 'Show in Explorer'
-    : 'Open Containing Folder';
 
 void _revealInFileManager(String path) {
   if (Platform.isMacOS) {
